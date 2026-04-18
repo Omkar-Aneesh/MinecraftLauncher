@@ -695,6 +695,7 @@ public class UI {
             if (gp.mouseH.pressed){
                 if (main.mouseEvents.isMouseCollidingWith(pBX + pBWidth + 50, pBY, 10, pBHeight) && !inNewInstallationMode){
                     inOptionsPanel = true;
+                    versionIndexForOptions = i;
                 }
             }
 
