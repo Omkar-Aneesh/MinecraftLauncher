@@ -39,6 +39,7 @@ public class UI {
     String modLoaderVersion = "";
 
     int versionIndexForOptions;
+    int versionYForOptions;
 
     String[] modLoaderNameList = new String[3];
 
@@ -696,6 +697,7 @@ public class UI {
                 if (main.mouseEvents.isMouseCollidingWith(pBX + pBWidth + 50, pBY, 10, pBHeight) && !inNewInstallationMode){
                     inOptionsPanel = true;
                     versionIndexForOptions = i;
+                    versionYForOptions = pBY;
                 }
             }
 
