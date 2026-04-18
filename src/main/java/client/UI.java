@@ -703,6 +703,10 @@ public class UI {
 
             y += 60;
         }
+
+        if (inOptionsPanel){
+
+        }
     }
 
     public void drawPlayButton(int x, int y, int width, int height, float fontSize, String version){
