@@ -5,7 +5,9 @@ import org.json.JSONObject;
 
 import java.io.BufferedInputStream;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.URL;
+import java.net.URLConnection;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -114,10 +116,45 @@ public class MinecraftInstaller {
     public static void download(String url, Path path) throws Exception {
         if (Files.exists(path)) return;
 
-        try (InputStream in = new BufferedInputStream(new URL(url).openStream())){
-            Files.copy(in, path, StandardCopyOption.REPLACE_EXISTING);
+        URL Url = new URL(url);
+        URLConnection connection = Url.openConnection();
+        int fileSize = connection.getContentLength();
+
+        try (InputStream in = new BufferedInputStream(new URL(url).openStream());
+             OutputStream out = Files.newOutputStream(path)){
+            byte[] buffer = new byte[8192];
+            long downloaded = 0;
+            int bytesRead;
+            long lastPrintTime = 0;
+
+            while ((bytesRead = in.read(buffer, 0, buffer.length)) != -1){
+                out.write(buffer, 0, bytesRead);
+                downloaded += bytesRead;
+
+                if (fileSize > 0){
+                    int percent = (int) ((downloaded * 100) / fileSize);
+
+                    long now = System.currentTimeMillis();
+
+                    if (now - lastPrintTime > 200){
+                        System.out.println("\rDownloading: " + percent + "%");
+                        lastPrintTime = now;
+                    }
+                } else {
+                    System.out.println("\rDownloaded: " + downloaded + "bytes");
+                }
+            }
         }
+        System.out.println("\nDownload complete!");
     }
+
+//    public static void download(String url, Path path) throws Exception {
+//        if (Files.exists(path)) return;
+//
+//        try (InputStream in = new BufferedInputStream(new URL(url).openStream())){
+//            Files.copy(in, path, StandardCopyOption.REPLACE_EXISTING);
+//        }
+//    }
 
     public static void main(String[] args) throws Exception {
         MinecraftInstaller mi = new MinecraftInstaller();
