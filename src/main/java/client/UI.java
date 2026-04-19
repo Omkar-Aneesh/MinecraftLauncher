@@ -127,13 +127,14 @@ public class UI {
     public void draw(){
         drawVersionPlayList();
         drawNewInstallationButton();
+        drawProgressBar();
 //        drawUserNameBox();
 //        drawPlayButton();
 //        drawVersionSelector();
-        System.out.println("[" + installDone + "/" + installTotal + "] " +
-                (int)((installDone * 100.0) / installTotal) + "% | " +
-                String.format("%.2f MB/s", installSpeed) +
-                " | ETA: " + installEta + "s");
+//        System.out.println("[" + installDone + "/" + installTotal + "] " +
+//                (int)((installDone * 100.0) / installTotal) + "% | " +
+//                String.format("%.2f MB/s", installSpeed) +
+//                " | ETA: " + installEta + "s");
     }
 
     public void loadVersionPlayList(){
@@ -157,6 +158,28 @@ public class UI {
         } catch (Exception e){
             throw new RuntimeException(e);
         }
+    }
+
+    public void drawProgressBar(){
+        int width = 1199;
+        int height = 40;
+        int x = 0;
+        int y = 800 - height - 1;
+
+        int progressPercentage = (int)((installDone * 100.0) / installTotal);
+
+        int progressX = 0;
+        int progressY = y;
+        double progressWidth = (width / 100.0) * progressPercentage;
+        int progressHeight = 40;
+
+        System.out.println("Percentage: " + progressPercentage + " | " + "width: " + progressWidth);
+
+        gp.setColor(Color.GREEN);
+        gp.fillRect(progressX, progressY, (int) progressWidth, progressHeight);
+
+        gp.setColor(Color.WHITE);
+        gp.drawRect(x, y, width, height);
     }
 
     public void drawNewInstallationWindow(){
