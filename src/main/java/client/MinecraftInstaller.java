@@ -26,12 +26,16 @@ public class MinecraftInstaller {
 
     ProgressListener listener;
 
+    String currentSituationString = "";
+
     public void setProcessListener(ProgressListener listener){
         this.listener = listener;
     }
 
     public String install(String version) throws Exception {
         String outString = "";
+
+        currentSituationString = "Fetching Versions";
 
         JSONObject manifest = readJson("https://launchermeta.mojang.com/mc/game/version_manifest.json");
 
@@ -46,6 +50,8 @@ public class MinecraftInstaller {
 
         JSONObject versionJson = readJson(versionUrl);
 
+        currentSituationString = "Creating Directories";
+
         Path versionDir = Paths.get(MC_DIR, "versions", version);
         Files.createDirectories(versionDir);
         Files.createDirectories(Paths.get(MC_DIR, "libraries"));
@@ -54,8 +60,12 @@ public class MinecraftInstaller {
 
         Files.write(versionDir.resolve(version + ".json"), versionJson.toString(2).getBytes());
 
+        currentSituationString = "Fetching Jar File";
+
         String jarUrl = versionJson.getJSONObject("downloads").getJSONObject("client").getString("url");
         download(jarUrl, versionDir.resolve(version + ".jar"));
+
+        currentSituationString = "Downloading Dependencies";
 
         JSONArray libs = versionJson.getJSONArray("libraries");
         for (int i = 0; i < libs.length(); i ++){
@@ -88,6 +98,8 @@ public class MinecraftInstaller {
         JSONObject objects = assetJson.getJSONObject("objects");
 
         ExecutorService pool = Executors.newFixedThreadPool(8);
+
+        currentSituationString = "Downloading Everything";
 
         AtomicInteger done = new AtomicInteger(0);
         int total = objects.length();
@@ -152,7 +164,7 @@ public class MinecraftInstaller {
         if (Files.exists(path)) return;
 
         URL Url = new URL(url);
-        URLConnection connection = Url.openConnection();
+//        URLConnection connection = Url.openConnection();
 
         try (InputStream in = new BufferedInputStream(new URL(url).openStream());
              OutputStream out = Files.newOutputStream(path)){

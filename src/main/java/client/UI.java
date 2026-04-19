@@ -29,6 +29,7 @@ public class UI {
     boolean inModLoaderSelectionMode = false;
     boolean inModLoaderVersionSelectionMode = false;
     boolean inOptionsPanel = false;
+    boolean progressBar = false;
 
     boolean enteringInstallationName = false;
     boolean enteringUserName = false;
@@ -127,7 +128,6 @@ public class UI {
     public void draw(){
         drawVersionPlayList();
         drawNewInstallationButton();
-        drawProgressBar();
 //        drawUserNameBox();
 //        drawPlayButton();
 //        drawVersionSelector();
@@ -707,6 +707,7 @@ public class UI {
 
                 Main.env.gamePanel.mouseH.pressed = false;
                 inNewInstallationMode = false;
+                progressBar = true;
             }
         }
     }
