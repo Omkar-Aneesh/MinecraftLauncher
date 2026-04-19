@@ -71,6 +71,8 @@ public class MinecraftInstaller {
         for (int i = 0; i < libs.length(); i ++){
             JSONObject lib = libs.getJSONObject(i);
 
+            currentSituationString = "Downloading Dependencies.";
+
             if (!lib.has("downloads")) continue;
             JSONObject downloads = lib.getJSONObject("downloads");
 
@@ -80,10 +82,14 @@ public class MinecraftInstaller {
             String url = artifact.getString("url");
             String path = artifact.getString("path");
 
+            currentSituationString = "Downloading Dependencies..";
+
             Path out = Paths.get(MC_DIR, "libraries", path);
             Files.createDirectories(out.getParent());
 
             download(url, out);
+
+            currentSituationString = "Downloading Dependencies...";
         }
 
         JSONObject assetIndex = versionJson.getJSONObject("assetIndex");
@@ -107,6 +113,7 @@ public class MinecraftInstaller {
         AtomicLong bytesDownloaded = new AtomicLong(0);
         long startTime = System.currentTimeMillis();
 
+        currentSituationString = "";
         for (String key: objects.keySet()){
             JSONObject obj = objects.getJSONObject(key);
 

@@ -26,6 +26,8 @@ public class MinecraftLauncher {
     static Path nativesDir;
     static String classpath;
 
+    public static String currentSituationString = "";
+
     public void run(String version, String username) {
         try {
             launch(version, username);
@@ -38,6 +40,8 @@ public class MinecraftLauncher {
         username = name;
         version = v;
 
+        currentSituationString = "Finding Version";
+
         Path versionDir = Paths.get(MC_DIR, "versions", version);
         JSONObject versionJson = new JSONObject( Files.readString(versionDir.resolve(version + ".json")) );
 
@@ -45,6 +49,8 @@ public class MinecraftLauncher {
 
         String url = client.getString("url");
         String sha1 = client.getString("sha1");
+
+        currentSituationString = "Finding Jar File";
 
         Path jarPath = Paths.get(MC_DIR, "versions", version, version + ".jar");
 
@@ -59,9 +65,9 @@ public class MinecraftLauncher {
 
         extractNatives(versionJson, nativesDir);
 
-        classpath = buildClasspath(versionJson, version);
+        currentSituationString = "Building Classpath";
 
-        System.out.println("Built Classpath");
+        classpath = buildClasspath(versionJson, version);
 
         String mainClass = versionJson.getString("mainClass");
 
@@ -69,7 +75,11 @@ public class MinecraftLauncher {
 
         List<String> command = new ArrayList<>();
 
+        currentSituationString = "Adding Commands";
+
         command.add("java");
+
+        currentSituationString = "Adding JVM Arguments";
 
         if (versionJson.has("arguments")){
             JSONObject args = versionJson.getJSONObject("arguments");
@@ -79,7 +89,7 @@ public class MinecraftLauncher {
             }
         }
 
-        System.out.println("jvm arguments set");
+        currentSituationString = "Overriding Minecraft Things";
 
         command.add("-Xms2G");
 
@@ -100,7 +110,7 @@ public class MinecraftLauncher {
 //            }
 //        }
 
-        System.out.println("game arguments set");
+        currentSituationString = "Setting Up Game Arguments";
 
         command.add("--username");
         command.add(username);
@@ -134,13 +144,7 @@ public class MinecraftLauncher {
 //        command.add("--demo");
 //        command.add("false");
 
-        System.out.println("Launching Minecraft...");
-
-        System.out.println("==== FINAL CLASSPATH ====");
-        for (String s : classpath.split(":")) {
-            System.out.println(s);
-        }
-        System.out.println("========================");
+        currentSituationString = "Launching Minecraft";
 
         ProcessBuilder pb = new ProcessBuilder(command);
         pb.inheritIO();

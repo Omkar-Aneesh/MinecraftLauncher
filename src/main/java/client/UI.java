@@ -30,6 +30,7 @@ public class UI {
     boolean inModLoaderVersionSelectionMode = false;
     boolean inOptionsPanel = false;
     boolean progressBar = false;
+    boolean installingMinecraft = false;
 
     boolean enteringInstallationName = false;
     boolean enteringUserName = false;
@@ -39,7 +40,7 @@ public class UI {
     boolean showUsernameCursor = true;
     boolean showInstallationNameCursor = true;
 
-    String username = "";
+    String username = "Aneesh015";
     String installationName = "";
     String version = "";
     String modLoader = "";
@@ -128,6 +129,10 @@ public class UI {
     public void draw(){
         drawVersionPlayList();
         drawNewInstallationButton();
+
+        if (progressBar){
+            drawProgressBar();
+        }
 //        drawUserNameBox();
 //        drawPlayButton();
 //        drawVersionSelector();
@@ -166,20 +171,38 @@ public class UI {
         int x = 0;
         int y = 800 - height - 1;
 
-        int progressPercentage = (int)((installDone * 100.0) / installTotal);
+        double progressPercentage = (installDone * 100.0) / installTotal;
 
         int progressX = 0;
         int progressY = y;
         double progressWidth = (width / 100.0) * progressPercentage;
         int progressHeight = 40;
 
-        System.out.println("Percentage: " + progressPercentage + " | " + "width: " + progressWidth);
-
         gp.setColor(Color.GREEN);
         gp.fillRect(progressX, progressY, (int) progressWidth, progressHeight);
 
         gp.setColor(Color.WHITE);
         gp.drawRect(x, y, width, height);
+
+        gp.set_font(gp.getFont().deriveFont(30f));
+
+        String str = "";
+
+        if (minecraftInstaller.currentSituationString.isEmpty()){
+            if (installingMinecraft) {
+                str = "[" + installDone + "/" + installTotal + "] " + (int) progressPercentage + "% | " +
+                        String.format("%.2f MB/s", installSpeed) + " | ETA: " + installEta + "s";
+            } else {
+                str = MinecraftLauncher.currentSituationString;
+            }
+        } else {
+            str = minecraftInstaller.currentSituationString;
+        }
+
+        int strX = (1200/2) - (getStringWidth(str)/2);
+        int strY = progressY + 30;
+
+        gp.drawString(str, strX, strY);
     }
 
     public void drawNewInstallationWindow(){
@@ -205,11 +228,11 @@ public class UI {
                 !inVersionSelectionMode && !inModLoaderSelectionMode && !inModLoaderVersionSelectionMode){
                 inNewInstallationMode = false;
 
-                username = "";
-                usernameBuffer.delete(0, usernameBuffer.length());
-                version = "";
-                modLoader = "";
-                installationName = "";
+//                username = "";
+//                usernameBuffer.delete(0, usernameBuffer.length());
+//                version = "";
+//                modLoader = "";
+//                installationName = "";
             }
         }
     }
@@ -693,12 +716,15 @@ public class UI {
                     });
                 });
 
+                installingMinecraft = true;
                 new Thread(() -> {
                     try {
                         minecraftInstaller.install(version);
                         FileWriter fileWriter = new FileWriter("minecraft/versionNames.txt", true);
                         fileWriter.write(version + ":" + installationName + "\n");
                         fileWriter.close();
+                        progressBar = false;
+                        installingMinecraft = false;
                         loadVersionPlayList();
                     } catch (Exception e){
                         throw new RuntimeException(e);
@@ -844,12 +870,18 @@ public class UI {
 
         if (gp.mouseH.pressed){
             if (main.mouseEvents.isMouseCollidingWith(x, y, width, height) && !inOptionsPanel && !inNewInstallationMode){
-                try {
-                    minecraftLauncher.run(version, username);
-                } catch (Exception e){
-                    throw new RuntimeException(e);
-                }
+
+                progressBar = true;
+                new Thread(() -> {
+                    try {
+                        minecraftLauncher.run(version, username);
+                        progressBar = false;
+                    } catch (Exception e){
+                        throw new RuntimeException(e);
+                    }
+                }).start();;
             }
+            gp.mouseH.pressed = false;
         }
     }
 
