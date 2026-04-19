@@ -10,8 +10,13 @@ import java.awt.event.KeyEvent;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.net.URL;
+import java.nio.file.FileStore;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.Scanner;
 
 public class UI {
@@ -62,7 +67,7 @@ public class UI {
     int modLoaderVersionSelectionPanelHeight = 481;
 
     int optionsPanelWidth = 100;
-    int optionPanelHeight = 100;
+    int optionPanelHeight = 40;
 
     BufferedImage screen2 = new BufferedImage(versionSelectionPanelWidth, versionSelectionPanelHeight, BufferedImage.TYPE_INT_ARGB);
     Graphics2D g2 = screen2.createGraphics();
@@ -669,6 +674,10 @@ public class UI {
         int x = 10;
         int y = 100;
 
+        int pBWidth = 80;
+        int pBHeight = 40;
+        int pBX = 1200 - pBWidth - 100;
+
         for (int i = 0; i < versionPlayList.size(); i ++){
             gp.setColor(Color.WHITE);
             gp.drawRect(-1, y, width + 1, 70);
@@ -684,9 +693,6 @@ public class UI {
             gp.set_font(gp.getFont().deriveFont(20f));
             gp.drawString(versionPlayList.get(i), x + 120 + strWidth + 10, y + 50);
 
-            int pBWidth = 80;
-            int pBHeight = 40;
-            int pBX = 1200 - pBWidth - 100;
             int pBY = y + (70/2) - (pBHeight/2);
 
             drawPlayButton(pBX, pBY, pBWidth, pBHeight, 30, versionPlayList.get(i));
@@ -694,10 +700,11 @@ public class UI {
             gp.drawImage(optionImage, pBX + pBWidth + 50, pBY, 10, pBHeight);
 
             if (gp.mouseH.pressed){
-                if (main.mouseEvents.isMouseCollidingWith(pBX + pBWidth + 50, pBY, 10, pBHeight) && !inNewInstallationMode){
+                if (main.mouseEvents.isMouseCollidingWith(pBX + pBWidth + 50, pBY, 10, pBHeight) && !inNewInstallationMode && !inOptionsPanel){
                     inOptionsPanel = true;
                     versionIndexForOptions = i;
                     versionYForOptions = pBY;
+                    gp.mouseH.pressed = false;
                 }
             }
 
@@ -705,7 +712,77 @@ public class UI {
         }
 
         if (inOptionsPanel){
+            int oPWidth = optionsPanelWidth;
+            int oPHeight = optionPanelHeight;
+            int oPX = pBX + pBWidth + 50 - oPWidth + 30;
+            int oPY = versionYForOptions;
 
+            g5.setColor(Color.black);
+            g5.fillRect(0, 0, oPWidth, oPHeight);
+
+            int rectX = 0;
+            int rectY = 0;
+            int rectWidth = optionsPanelWidth;
+            int rectHeight = 40;
+
+            g5.setColor(Color.GRAY);
+            g5.fillRect(rectX, rectY, rectWidth, rectHeight);
+            g5.setColor(Color.BLACK);
+            g5.drawRect(rectX, rectY, rectWidth,rectHeight);
+
+            String str = "Delete";
+
+            g5.setColor(Color.WHITE);
+            g5.setFont(g5.getFont().deriveFont(30f));
+            g5.drawString(str, (rectWidth/2) - (getStringWidth(str)/2), rectY + 30);
+
+            if (gp.mouseH.pressed){
+                if (main.mouseEvents.isMouseCollidingWith(oPX + rectX, oPY + rectY, rectWidth, rectHeight)){
+                    deleteVersion(versionPlayList.get(versionIndexForOptions));
+                    inOptionsPanel = false;
+                    loadVersionPlayList();
+                }
+                if (!main.mouseEvents.isMouseCollidingWith(oPX, oPY, oPWidth, oPHeight)){
+                    inOptionsPanel = false;
+                }
+                gp.mouseH.pressed = false;
+            }
+
+            gp.drawImage(screen5, oPX, oPY, oPWidth, oPHeight);
+
+        }
+    }
+
+    public void deleteVersion(String version){
+        try (var paths = Files.walk(Paths.get("minecraft", "versions", version))){
+            paths.sorted(Comparator.reverseOrder()).map(Path::toFile).forEach(java.io.File::delete);
+
+            File file = new File("minecraft/versionNames.txt");
+            Scanner scanner = new Scanner(file);
+
+            ArrayList<String> versionList = new ArrayList<>();
+
+            while (scanner.hasNextLine()){
+                String line = scanner.nextLine();
+                if (!line.isEmpty()){
+                    String[] split = line.split(":");
+                    if (!split[0].equals(version)){
+                        versionList.add(line);
+                    }
+                }
+            }
+
+            StringBuilder versionListStr = new StringBuilder();
+
+            for (String str: versionList){
+                versionListStr.append(str + "\n");
+            }
+
+            FileWriter fileWriter = new FileWriter("minecraft/versionNames.txt");
+            fileWriter.write(versionListStr.toString());
+            fileWriter.close();
+        } catch (IOException e){
+            throw new RuntimeException(e);
         }
     }
 
@@ -722,7 +799,7 @@ public class UI {
         gp.drawString(str, x + (width/2) - (getStringWidth(str)/2), (int) (y + fontSize));
 
         if (gp.mouseH.pressed){
-            if (main.mouseEvents.isMouseCollidingWith(x, y, width, height)){
+            if (main.mouseEvents.isMouseCollidingWith(x, y, width, height) && !inOptionsPanel && !inNewInstallationMode){
                 try {
                     minecraftLauncher.run(version, username);
                 } catch (Exception e){
