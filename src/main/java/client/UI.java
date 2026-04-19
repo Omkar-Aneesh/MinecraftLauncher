@@ -5,6 +5,7 @@ import sjdk.com.aneesh.sjdk.main.GamePanel;
 
 import javax.imageio.ImageIO;
 import javax.imageio.stream.ImageInputStream;
+import javax.swing.*;
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.image.BufferedImage;
@@ -45,6 +46,11 @@ public class UI {
 
     int versionIndexForOptions;
     int versionYForOptions;
+
+    int installDone;
+    int installTotal;
+    double installSpeed;
+    long installEta;
 
     String[] modLoaderNameList = new String[3];
 
@@ -124,6 +130,10 @@ public class UI {
 //        drawUserNameBox();
 //        drawPlayButton();
 //        drawVersionSelector();
+        System.out.println("[" + installDone + "/" + installTotal + "] " +
+                (int)((installDone * 100.0) / installTotal) + "% | " +
+                String.format("%.2f MB/s", installSpeed) +
+                " | ETA: " + installEta + "s");
     }
 
     public void loadVersionPlayList(){
@@ -651,16 +661,26 @@ public class UI {
 
         if (Main.env.gamePanel.mouseH.pressed && !inVersionSelectionMode) {
             if (main.mouseEvents.isMouseCollidingWith(x, y, width, height)) {
+                minecraftInstaller.setProcessListener((done, total, speed, eta) -> {
+                    SwingUtilities.invokeLater(() -> {
+                        this.installDone = done;
+                        this.installTotal = total;
+                        this.installSpeed = speed;
+                        this.installEta = eta;
+                    });
+                });
 
-                try {
-                    minecraftInstaller.install(version);
-                    FileWriter fileWriter = new FileWriter("minecraft/versionNames.txt", true);
-                    fileWriter.write(version + ":" + installationName + "\n");
-                    fileWriter.close();
-                    loadVersionPlayList();
-                } catch (Exception e){
-                    throw new RuntimeException(e);
-                }
+                new Thread(() -> {
+                    try {
+                        minecraftInstaller.install(version);
+                        FileWriter fileWriter = new FileWriter("minecraft/versionNames.txt", true);
+                        fileWriter.write(version + ":" + installationName + "\n");
+                        fileWriter.close();
+                        loadVersionPlayList();
+                    } catch (Exception e){
+                        throw new RuntimeException(e);
+                    }
+                }).start();
 
                 Main.env.gamePanel.mouseH.pressed = false;
                 inNewInstallationMode = false;

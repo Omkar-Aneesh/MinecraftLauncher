@@ -1,5 +1,5 @@
 package client;
 
 public interface ProgressListener {
-    void onProgress(long downloaded, long total);
+    void onProgress(int done, int total, double speedMBps, long etaSeconds);
 }

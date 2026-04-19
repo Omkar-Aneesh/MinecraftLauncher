@@ -14,14 +14,25 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class MinecraftInstaller {
 
     static String MC_DIR = "minecraft";
 
-    public void install(String version) throws Exception {
+    ProgressListener listener;
+
+    public void setProcessListener(ProgressListener listener){
+        this.listener = listener;
+    }
+
+    public String install(String version) throws Exception {
+        String outString = "";
+
         JSONObject manifest = readJson("https://launchermeta.mojang.com/mc/game/version_manifest.json");
 
         String versionUrl = null;
@@ -78,6 +89,12 @@ public class MinecraftInstaller {
 
         ExecutorService pool = Executors.newFixedThreadPool(8);
 
+        AtomicInteger done = new AtomicInteger(0);
+        int total = objects.length();
+
+        AtomicLong bytesDownloaded = new AtomicLong(0);
+        long startTime = System.currentTimeMillis();
+
         for (String key: objects.keySet()){
             JSONObject obj = objects.getJSONObject(key);
 
@@ -87,24 +104,42 @@ public class MinecraftInstaller {
             String url = "https://resources.download.minecraft.net/" + sub + "/" + hash;
             Path out = Paths.get(MC_DIR, "assets", "objects", sub, hash);
 
-            AtomicInteger counter = new AtomicInteger(0);
-            int total = objects.length();
-
             pool.submit(() -> {
                 try{
+                    if (Files.exists(out)){
+                        int current = done.incrementAndGet();
+                        return;
+                    }
+
                     Files.createDirectories(out.getParent());
-                    download(url, out);
-                    int done = counter.incrementAndGet();
-                    System.out.println("Progress: " + done + "/" + total);
+                    download(url, out, bytesDownloaded);
+
+                    int current = done.incrementAndGet();
+
+                    long now = System.currentTimeMillis();
+                    double seconds = (now - startTime) / 1000.0;
+
+                    double speedMBps = (bytesDownloaded.get() / 1024.0 / 1024.0) / seconds;
+
+                    double filePerSecond = current / seconds;
+                    long eta = (long) ((total - current) / filePerSecond);
+
+                    if (listener != null){
+                        listener.onProgress(current, total, speedMBps, eta);
+                    }
                 } catch (Exception e){
                     System.out.println("Failed: " + url);
                 }
             });
         }
 
+//        System.out.println(done.get());
+
         pool.shutdown();
         pool.awaitTermination(Long.MAX_VALUE, TimeUnit.SECONDS);
         System.out.println("Minecraft " + version + " Installed!");
+
+        return outString;
     }
 
     public JSONObject readJson(String url) throws Exception {
@@ -113,48 +148,49 @@ public class MinecraftInstaller {
         }
     }
 
-    public static void download(String url, Path path) throws Exception {
+    public static void download(String url, Path path, AtomicLong globalBytes) throws Exception {
         if (Files.exists(path)) return;
 
         URL Url = new URL(url);
         URLConnection connection = Url.openConnection();
-        int fileSize = connection.getContentLength();
 
         try (InputStream in = new BufferedInputStream(new URL(url).openStream());
              OutputStream out = Files.newOutputStream(path)){
             byte[] buffer = new byte[8192];
-            long downloaded = 0;
             int bytesRead;
-            long lastPrintTime = 0;
 
             while ((bytesRead = in.read(buffer, 0, buffer.length)) != -1){
                 out.write(buffer, 0, bytesRead);
-                downloaded += bytesRead;
+                globalBytes.addAndGet(bytesRead);
 
-                if (fileSize > 0){
-                    int percent = (int) ((downloaded * 100) / fileSize);
+//                if (listener != null){
+//                    listener.onProgress(downloaded, fileSize);
+//                }
 
-                    long now = System.currentTimeMillis();
-
-                    if (now - lastPrintTime > 200){
-                        System.out.println("\rDownloading: " + percent + "%");
-                        lastPrintTime = now;
-                    }
-                } else {
-                    System.out.println("\rDownloaded: " + downloaded + "bytes");
-                }
+//                if (fileSize > 0){
+//                    int percent = (int) ((downloaded * 100) / fileSize);
+//
+//                    long now = System.currentTimeMillis();
+//
+//                    if (now - lastPrintTime > 200){
+//                        System.out.println("\rDownloading: " + percent + "%");
+//                        lastPrintTime = now;
+//                    }
+//                } else {
+//                    System.out.println("\rDownloaded: " + downloaded + "bytes");
+//                }
             }
         }
-        System.out.println("\nDownload complete!");
+//        System.out.println("\nDownload complete!");
     }
 
-//    public static void download(String url, Path path) throws Exception {
-//        if (Files.exists(path)) return;
-//
-//        try (InputStream in = new BufferedInputStream(new URL(url).openStream())){
-//            Files.copy(in, path, StandardCopyOption.REPLACE_EXISTING);
-//        }
-//    }
+    public static void download(String url, Path path) throws Exception {
+        if (Files.exists(path)) return;
+
+        try (InputStream in = new BufferedInputStream(new URL(url).openStream())){
+            Files.copy(in, path, StandardCopyOption.REPLACE_EXISTING);
+        }
+    }
 
     public static void main(String[] args) throws Exception {
         MinecraftInstaller mi = new MinecraftInstaller();
