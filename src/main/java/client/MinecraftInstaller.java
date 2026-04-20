@@ -7,18 +7,15 @@ import java.io.BufferedInputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URL;
-import java.net.URLConnection;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.atomic.AtomicReference;
 
 public class MinecraftInstaller {
 
@@ -54,6 +51,7 @@ public class MinecraftInstaller {
 
         Path versionDir = Paths.get(MC_DIR, "versions", version);
         Files.createDirectories(versionDir);
+        MC_DIR = "minecraft/versions/" + version + "/res";
         Files.createDirectories(Paths.get(MC_DIR, "libraries"));
         Files.createDirectories(Paths.get(MC_DIR, "assets", "indexes"));
         Files.createDirectories(Paths.get(MC_DIR, "assets", "objects"));
@@ -157,6 +155,8 @@ public class MinecraftInstaller {
         pool.shutdown();
         pool.awaitTermination(Long.MAX_VALUE, TimeUnit.SECONDS);
         System.out.println("Minecraft " + version + " Installed!");
+
+        MC_DIR = "minecraft";
 
         return outString;
     }

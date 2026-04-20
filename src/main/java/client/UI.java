@@ -4,19 +4,16 @@ import org.json.JSONObject;
 import sjdk.com.aneesh.sjdk.main.GamePanel;
 
 import javax.imageio.ImageIO;
-import javax.imageio.stream.ImageInputStream;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.net.URL;
-import java.nio.file.FileStore;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Scanner;
 
@@ -874,6 +871,7 @@ public class UI {
                 progressBar = true;
                 new Thread(() -> {
                     try {
+                        gp.mouseH.pressed = false;
                         minecraftLauncher.run(version, username);
                         progressBar = false;
                     } catch (Exception e){
@@ -881,7 +879,6 @@ public class UI {
                     }
                 }).start();;
             }
-            gp.mouseH.pressed = false;
         }
     }
 

@@ -124,6 +124,8 @@ public class MinecraftLauncher {
         command.add("--version");
         command.add(version);
 
+        MC_DIR = "minecraft/versions/" + version + "/res";
+
         command.add("--gameDir");
         command.add(MC_DIR);
 
@@ -153,6 +155,7 @@ public class MinecraftLauncher {
     }
 
     public static String buildClasspath(JSONObject versionJson, String version){
+        MC_DIR = "minecraft/versions/" + version + "/res";
         StringBuilder cp = new StringBuilder();
 
         String sep = System.getProperty("os.name").toLowerCase().contains("win") ? ";" : ":";
@@ -196,6 +199,8 @@ public class MinecraftLauncher {
             }
         }
 
+        MC_DIR = "minecraft";
+
         Path jar = Paths.get(MC_DIR, "versions", version, version + ".jar");
         cp.append(jar.toAbsolutePath());
 
@@ -218,6 +223,8 @@ public class MinecraftLauncher {
 
             String key = "natives-" + os;
             if (!classifiers.has(key)) continue;
+
+            MC_DIR = "minecraft/versions/" + version + "/res";
 
             JSONObject nativeObj = classifiers.getJSONObject(key);
             Path jarPath = Paths.get(MC_DIR, "libraries", nativeObj.getString("path"));
