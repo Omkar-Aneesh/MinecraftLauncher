@@ -30,7 +30,7 @@ public class MinecraftLauncher {
 
     public void run(String version, String username) {
         try {
-            launch(version, username);
+            launchForge(version, username);
         } catch (Exception e){
             throw new RuntimeException(e);
         }
@@ -83,8 +83,8 @@ public class MinecraftLauncher {
 
         classpath = buildClasspath(versionJson, version);
 
-//        String mainClass = versionJson.getString("mainClass");
-        String mainClass = "cpw.mods.bootstraplauncher.BootstrapLauncher";
+        String mainClass = versionJson.getString("mainClass");
+//        String mainClass = "cpw.mods.bootstraplauncher.BootstrapLauncher";
 
         assetIndex = versionJson.getJSONObject("assetIndex").getString("id");
 
@@ -98,6 +98,204 @@ public class MinecraftLauncher {
 
         if (versionJson.has("arguments")){
             JSONObject args = versionJson.getJSONObject("arguments");
+
+            if (args.has("jvm")){
+                addArguments(command, args.getJSONArray("jvm"));
+            }
+        }
+
+        currentSituationString = "Overriding Minecraft Things";
+
+        command.add("-Xms2G");
+
+        command.add("-Djava.library.path=" + nativesDir.toAbsolutePath());
+
+        command.add("-Dminecraft.api.session.host=http://localhost:8080");
+
+        command.add("-cp");
+        command.add(classpath);
+
+        command.add(mainClass);
+
+//        if (versionJson.has("arguments")){
+//            JSONObject args = versionJson.getJSONObject("arguments");
+//
+//            if (args.has("game")){
+//                addArguments(command, args.getJSONArray("game"));
+//            }
+//        }
+
+        currentSituationString = "Setting Up Game Arguments";
+
+        command.add("--username");
+        command.add(username);
+
+        command.add("--uuid");
+        command.add(uuid.toString());
+
+        command.add("--accessToken");
+        command.add("0");
+
+        command.add("--version");
+        command.add(version);
+
+//        command.add("--launchTarget");
+//        command.add("forge_client");
+
+//        MC_DIR = "minecraft/versions/" + version + "/res";
+
+        command.add("--gameDir");
+        command.add(MC_DIR);
+
+        command.add("--assetsDir");
+        command.add(Paths.get(MC_DIR, "assets").toString());
+
+        command.add("--assetIndex");
+        command.add(assetIndex);
+
+        command.add("--userType");
+        command.add("mojang");
+
+//        command.add("--server");
+//        command.add("127.0.0.1");
+//        command.add("--port");
+//        command.add("25565");
+
+//        command.add("--demo");
+//        command.add("false");
+
+        currentSituationString = "Launching Minecraft";
+
+        ProcessBuilder pb = new ProcessBuilder(command);
+        pb.inheritIO();
+        pb.start();
+
+        MC_DIR = "minecraft";
+
+    }
+
+    public static void launchForge(String v, String name) throws Exception{
+        username = name;
+        version = v;
+
+        currentSituationString = "Finding Version";
+
+        Path versionDir = Paths.get(MC_DIR, "versions", version);
+        JSONObject versionJson = new JSONObject( Files.readString(versionDir.resolve(version + ".json")) );
+
+        JSONObject merged = null;
+
+        JSONObject baseJson = new JSONObject();
+
+        JSONArray mergedLibs = new JSONArray();
+        JSONObject mergedArgs = new JSONObject();
+
+        if (versionJson.has("inheritsFrom")){
+            String baseVersion = versionJson.getString("inheritsFrom");
+
+            Path basePath = Paths.get(MC_DIR, "versions", baseVersion, baseVersion + ".json");
+
+            baseJson = new JSONObject(Files.readString(basePath));
+
+            System.out.println(baseJson.toString(2));
+
+            merged = new JSONObject(baseJson.toString());
+
+            for (String key: versionJson.keySet()){
+                if (!key.equals("libraries") && !key.equals("arguments")){
+                    merged.put(key, versionJson.get(key));
+                }
+            }
+
+            //libraries
+
+            for (Object o: baseJson.getJSONArray("libraries")){
+                mergedLibs.put(o);
+            }
+
+            for (Object o: versionJson.getJSONArray("libraries")){
+                mergedLibs.put(o);
+            }
+
+            //arguments
+
+            if (baseJson.has("arguments")){
+                mergedArgs = new JSONObject(baseJson.getJSONObject("arguments").toString());
+//                for (Object o: baseJson.getJSONArray("arguments")) mergedArgs.put(o);
+            }
+
+            if (versionJson.has("arguments")){
+//                for (Object o: versionJson.getJSONArray("arguments")) mergedArgs.put(o);
+                JSONObject forgeArgs = versionJson.getJSONObject("arguments");
+
+                if (forgeArgs.has("jvm")){
+                    JSONArray jvm = new JSONArray();
+
+                    if (mergedArgs.has("jvm")) {
+                        for (Object o: mergedArgs.getJSONArray("jvm")) jvm.put(o);
+                    }
+
+                    for (Object o: forgeArgs.getJSONArray("jvm")) jvm.put(o);
+
+                    mergedArgs.put("jvm", jvm);
+                }
+
+                if (forgeArgs.has("game")){
+                    JSONArray game = new JSONArray();
+
+                    if (mergedArgs.has("game")){
+                        for (Object o: mergedArgs.getJSONArray("game")) game.put(o);
+                    }
+
+                    for (Object o: forgeArgs.getJSONArray("game")) game.put(o);
+
+                    mergedArgs.put("game", game);
+                }
+            }
+
+            merged.put("libraries", mergedLibs);
+            merged.put("arguments", mergedArgs);
+        }
+
+        JSONObject client = merged.getJSONObject("downloads").getJSONObject("client");
+
+        String url = client.getString("url");
+        String sha1 = client.getString("sha1");
+
+        currentSituationString = "Finding Jar File";
+
+        Path jarPath = Paths.get(MC_DIR, "versions", version, version + ".jar");
+
+        if (!HashUtil.verifyFile(jarPath, sha1)){
+            FileDownloader.downloadFile(url, jarPath);
+        }
+
+        uuid = UUID.nameUUIDFromBytes(username.getBytes());
+
+        nativesDir = Paths.get(MC_DIR, "versions", version, "natives");
+        Files.createDirectories(nativesDir);
+
+        extractNatives(merged, nativesDir);
+
+        currentSituationString = "Building Classpath";
+
+        classpath = buildClasspath(merged, version);
+
+        String mainClass = merged.getString("mainClass");
+//        String mainClass = "cpw.mods.bootstraplauncher.BootstrapLauncher";
+
+        assetIndex = merged.getJSONObject("assetIndex").getString("id");
+
+        List<String> command = new ArrayList<>();
+
+        currentSituationString = "Adding Commands";
+
+        command.add("java");
+
+        currentSituationString = "Adding JVM Arguments";
+
+        if (merged.has("arguments")){
+            JSONObject args = merged.getJSONObject("arguments");
 
             if (args.has("jvm")){
                 addArguments(command, args.getJSONArray("jvm"));
