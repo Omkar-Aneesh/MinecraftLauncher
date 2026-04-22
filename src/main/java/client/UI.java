@@ -88,6 +88,8 @@ public class UI {
 
     MinecraftLauncher minecraftLauncher = new MinecraftLauncher();
     MinecraftInstaller minecraftInstaller = new MinecraftInstaller();
+    ForgeInstaller forgeInstaller = new ForgeInstaller();
+    ForgeRunner forgeRunner = new ForgeRunner();
 
     ArrayList<String> versionList = new ArrayList<>();
     ArrayList<String> modLoaderList = new ArrayList<>();
@@ -198,6 +200,19 @@ public class UI {
             }
         } else {
             str = minecraftInstaller.currentSituationString;
+        }
+
+        if (modLoader.equals("Forge")){
+            if (forgeRunner.currentSituationString.isEmpty()) {
+                if (installingMinecraft) {
+                    str = "[" + installDone + "/" + installTotal + "] " + (int) progressPercentage + "% | " +
+                            String.format("%.2f MB/s", installSpeed) + " | ETA: " + installEta + "s";
+                } else {
+                    str = forgeInstaller.currentSituationString;
+                }
+            } else {
+                str = forgeRunner.currentSituationString;
+            }
         }
 
         int strX = (1200/2) - (getStringWidth(str)/2);
@@ -708,29 +723,56 @@ public class UI {
 
         if (Main.env.gamePanel.mouseH.pressed && !inVersionSelectionMode) {
             if (main.mouseEvents.isMouseCollidingWith(x, y, width, height)) {
-                minecraftInstaller.setProcessListener((done, total, speed, eta) -> {
-                    SwingUtilities.invokeLater(() -> {
-                        this.installDone = done;
-                        this.installTotal = total;
-                        this.installSpeed = speed;
-                        this.installEta = eta;
+                if (modLoader.equals("Vanilla")) {
+                    minecraftInstaller.setProcessListener((done, total, speed, eta) -> {
+                        SwingUtilities.invokeLater(() -> {
+                            this.installDone = done;
+                            this.installTotal = total;
+                            this.installSpeed = speed;
+                            this.installEta = eta;
+                        });
                     });
-                });
 
-                installingMinecraft = true;
-                new Thread(() -> {
-                    try {
-                        minecraftInstaller.install(version);
-                        FileWriter fileWriter = new FileWriter("minecraft/versionNames.txt", true);
-                        fileWriter.write(version + ":" + installationName + "\n");
-                        fileWriter.close();
-                        progressBar = false;
-                        installingMinecraft = false;
-                        loadVersionPlayList();
-                    } catch (Exception e){
-                        throw new RuntimeException(e);
-                    }
-                }).start();
+                    installingMinecraft = true;
+                    new Thread(() -> {
+                        try {
+                            minecraftInstaller.install(version);
+                            FileWriter fileWriter = new FileWriter("minecraft/versionNames.txt", true);
+                            fileWriter.write(version + ":" + installationName + "\n");
+                            fileWriter.close();
+                            progressBar = false;
+                            installingMinecraft = false;
+                            loadVersionPlayList();
+                        } catch (Exception e) {
+                            throw new RuntimeException(e);
+                        }
+                    }).start();
+                } else if (modLoader.equals("Forge")) {
+                    forgeInstaller.setProcessListener((done, total, speed, eta) -> {
+                        SwingUtilities.invokeLater(() -> {
+                            this.installDone = done;
+                            this.installTotal = total;
+                            this.installSpeed = speed;
+                            this.installEta = eta;
+                        });
+                    });
+
+                    installingMinecraft = true;
+                    new Thread(() -> {
+                        try {
+                            String forgeVersion = forgeInstaller.install(version);
+                            forgeRunner.run(version, forgeVersion);
+                            FileWriter fileWriter = new FileWriter("minecraft/versionNames.txt", true);
+                            fileWriter.write(version + "-forge-" + forgeVersion + ":" + installationName + "\n");
+                            fileWriter.close();
+                            progressBar = false;
+                            installingMinecraft = false;
+                            loadVersionPlayList();
+                        } catch (Exception e) {
+                            throw new RuntimeException(e);
+                        }
+                    }).start();
+                }
 
                 Main.env.gamePanel.mouseH.pressed = false;
                 inNewInstallationMode = false;

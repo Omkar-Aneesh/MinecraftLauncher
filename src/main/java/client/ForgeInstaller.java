@@ -26,6 +26,8 @@ public class ForgeInstaller {
 
     ProgressListener listener;
 
+    String currentSituationString = "";
+
     String MC_DIR = "minecraft";
 
     ArrayList<String> versionList = new ArrayList<>();
@@ -36,19 +38,52 @@ public class ForgeInstaller {
         fi.install("1.21.11");
     }
 
-    public void install(String version){
+    public void setProcessListener(ProgressListener listener){
+        this.listener = listener;
+    }
+
+    public String install(String version){
+        currentSituationString = "Creating Directories";
         try {
             Files.createDirectories(Paths.get("minecraft/versions", version));
         } catch (Exception e){
             throw new RuntimeException(e);
         }
 
+        currentSituationString = "Installing Minecraft";
+
         installVanilla(version);
+
+        currentSituationString = "Installing Forge";
 
         String forgeVersion = getBestForgeVersion(version);
         download(version, forgeVersion);
 
-        System.out.println(forgeVersion);
+//        System.out.println(forgeVersion);
+
+        return forgeVersion;
+    }
+
+    public void install(String version, String forgeVersion){
+        currentSituationString = "Creating Directories";
+        try {
+            Files.createDirectories(Paths.get("minecraft/versions", version));
+        } catch (Exception e){
+            throw new RuntimeException(e);
+        }
+
+        currentSituationString = "Installing Minecraft";
+
+        installVanilla(version);
+
+        currentSituationString = "Installing Forge";
+
+        try {
+            download(version, forgeVersion);
+        } catch (Exception e){
+            throw new RuntimeException(e);
+        }
+//        System.out.println(forgeVersion);
     }
 
     public JSONObject readJson(String url) {
@@ -72,6 +107,8 @@ public class ForgeInstaller {
                 }
             }
 
+            currentSituationString = "Creating Directories";
+
             JSONObject versionJson = readJson(versionUrl);
 
             Path versionDir = Paths.get(MC_DIR, "versions", version);
@@ -85,6 +122,8 @@ public class ForgeInstaller {
 
 //            String jarUrl = versionJson.getJSONObject("downloads").getJSONObject("client").getString("url");
 //            download(jarUrl, versionDir.resolve(version + ".jar"));
+
+            currentSituationString = "Downloading Dependencies";
 
             JSONArray libs = versionJson.getJSONArray("libraries");
             for (int i = 0; i < libs.length(); i ++){
@@ -104,6 +143,8 @@ public class ForgeInstaller {
 
                 download(url, out);
             }
+
+            currentSituationString = "Setting Up Everything";
 
             JSONObject assetIndex = versionJson.getJSONObject("assetIndex");
             String assetUrl = assetIndex.getString("url");
@@ -166,12 +207,13 @@ public class ForgeInstaller {
 
             pool.shutdown();
             pool.awaitTermination(Long.MAX_VALUE, TimeUnit.SECONDS);
-            System.out.println("Minecraft " + version + " Installed!");
+//            System.out.println("Minecraft " + version + " Installed!");
 
             MC_DIR = "minecraft";
         } catch (Exception e){
             throw new RuntimeException(e);
         }
+        currentSituationString = "";
     }
 
     public void download(String version, String forgeVersion){
@@ -192,7 +234,7 @@ public class ForgeInstaller {
                 totalRead += bytesRead;
 
                 int progress = (int)((totalRead * 100L) / fileSize);
-                System.out.println("downloading: " + progress + "%");
+//                System.out.println("downloading: " + progress + "%");
             }
 
             out.close();

@@ -13,9 +13,23 @@ import java.util.jar.JarFile;
 
 public class ForgeRunner {
 
+    public String currentSituationString = "Initializing Forge";
+
     public static void main(String[] args) {
         ForgeRunner forgeRunner = new ForgeRunner();
         forgeRunner.run("1.21.11", "61.1.0");
+    }
+
+    public void deleteInstaller(){
+        File installer = new File("minecraft/forge-installer.jar");
+
+        if (installer.exists()){
+            boolean deleted = installer.delete();
+
+            if (deleted){
+                System.out.println("Deleted");
+            }
+        }
     }
 
     public void run(String mcVersion, String forgeVersion){
@@ -41,6 +55,7 @@ public class ForgeRunner {
 //        downloadLibraries(finalJson, mcDir);
 //
 //        // 5. Run installer (IMPORTANT)
+        createLauncherProfile("minecraft");
         runJar(mcDir);
 
         System.out.println("✅ Forge setup complete");
@@ -179,6 +194,8 @@ public class ForgeRunner {
     public void runJar(String mcDir){
         File file = new File(mcDir);
 
+        currentSituationString = "Running Forge Installer";
+
         try {
             ProcessBuilder pb = new ProcessBuilder(
                     "java",
@@ -200,9 +217,19 @@ public class ForgeRunner {
             String line;
             while ((line = reader.readLine()) != null) {
                 System.out.println("[Forge] " + line);
+                if (line.contains("Copying")){
+                    currentSituationString = "Copying Data";
+                }
+                if (line.contains("Patching")){
+                    currentSituationString = "Patching Minecraft";
+                }
             }
 
             int exit = process.waitFor();
+
+            currentSituationString = "Deleting Installer";
+
+            deleteInstaller();
 
 //            if (exit != 0) {
 //                throw new RuntimeException("Forge install failed!");

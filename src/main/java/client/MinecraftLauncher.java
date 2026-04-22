@@ -30,7 +30,11 @@ public class MinecraftLauncher {
 
     public void run(String version, String username) {
         try {
-            launchForge(version, username);
+            if (version.contains("forge")) {
+                launchForge(version, username);
+            } else {
+                launch(version, username);
+            }
         } catch (Exception e){
             throw new RuntimeException(e);
         }
