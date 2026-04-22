@@ -170,6 +170,10 @@ public class UI {
 
         double progressPercentage = (installDone * 100.0) / installTotal;
 
+        if (progressPercentage == 100){
+            progressPercentage = 0;
+        }
+
         int progressX = 0;
         int progressY = y;
         double progressWidth = (width / 100.0) * progressPercentage;

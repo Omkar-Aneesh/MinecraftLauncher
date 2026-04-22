@@ -51,7 +51,7 @@ public class MinecraftInstaller {
 
         Path versionDir = Paths.get(MC_DIR, "versions", version);
         Files.createDirectories(versionDir);
-        MC_DIR = "minecraft/versions/" + version + "/res";
+//        MC_DIR = "minecraft/versions/" + version + "/res";
         Files.createDirectories(Paths.get(MC_DIR, "libraries"));
         Files.createDirectories(Paths.get(MC_DIR, "assets", "indexes"));
         Files.createDirectories(Paths.get(MC_DIR, "assets", "objects"));

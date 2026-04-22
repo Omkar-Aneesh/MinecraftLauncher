@@ -45,7 +45,21 @@ public class MinecraftLauncher {
         Path versionDir = Paths.get(MC_DIR, "versions", version);
         JSONObject versionJson = new JSONObject( Files.readString(versionDir.resolve(version + ".json")) );
 
-        JSONObject client = versionJson.getJSONObject("downloads").getJSONObject("client");
+        JSONObject client;
+
+        if (versionJson.has("inheritsFrom")){
+            String baseVersion = versionJson.getString("inheritsFrom");
+
+            Path basePath = Paths.get(MC_DIR, "versions", baseVersion, baseVersion + ".json");
+
+            JSONObject baseJson = new JSONObject(Files.readString(basePath));
+
+            System.out.println(baseJson.toString(2));
+
+            client = baseJson.getJSONObject("downloads").getJSONObject("client");
+        } else {
+            client = versionJson.getJSONObject("downloads").getJSONObject("client");
+        }
 
         String url = client.getString("url");
         String sha1 = client.getString("sha1");
@@ -69,7 +83,8 @@ public class MinecraftLauncher {
 
         classpath = buildClasspath(versionJson, version);
 
-        String mainClass = versionJson.getString("mainClass");
+//        String mainClass = versionJson.getString("mainClass");
+        String mainClass = "cpw.mods.bootstraplauncher.BootstrapLauncher";
 
         assetIndex = versionJson.getJSONObject("assetIndex").getString("id");
 
@@ -124,7 +139,10 @@ public class MinecraftLauncher {
         command.add("--version");
         command.add(version);
 
-        MC_DIR = "minecraft/versions/" + version + "/res";
+        command.add("--launchTarget");
+        command.add("forge_client");
+
+//        MC_DIR = "minecraft/versions/" + version + "/res";
 
         command.add("--gameDir");
         command.add(MC_DIR);
@@ -152,10 +170,12 @@ public class MinecraftLauncher {
         pb.inheritIO();
         pb.start();
 
+        MC_DIR = "minecraft";
+
     }
 
     public static String buildClasspath(JSONObject versionJson, String version){
-        MC_DIR = "minecraft/versions/" + version + "/res";
+//        MC_DIR = "minecraft/versions/" + version + "/res";
         StringBuilder cp = new StringBuilder();
 
         String sep = System.getProperty("os.name").toLowerCase().contains("win") ? ";" : ":";
@@ -224,7 +244,7 @@ public class MinecraftLauncher {
             String key = "natives-" + os;
             if (!classifiers.has(key)) continue;
 
-            MC_DIR = "minecraft/versions/" + version + "/res";
+//            MC_DIR = "minecraft/versions/" + version + "/res";
 
             JSONObject nativeObj = classifiers.getJSONObject(key);
             Path jarPath = Paths.get(MC_DIR, "libraries", nativeObj.getString("path"));
