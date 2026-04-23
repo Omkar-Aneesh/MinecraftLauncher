@@ -59,6 +59,8 @@ public class ForgeInstaller {
         String forgeVersion = getBestForgeVersion(version);
         download(version, forgeVersion);
 
+        currentSituationString = "";
+
 //        System.out.println(forgeVersion);
 
         return forgeVersion;
@@ -216,6 +218,8 @@ public class ForgeInstaller {
         currentSituationString = "";
     }
 
+
+
     public void download(String version, String forgeVersion){
         try {
             URL url = new URL("https://maven.minecraftforge.net/net/minecraftforge/forge/" + version + "-" + forgeVersion + "/forge-"+ version + "-" + forgeVersion +"-installer.jar");
@@ -242,6 +246,38 @@ public class ForgeInstaller {
         } catch (Exception e){
             throw new RuntimeException(e);
         }
+    }
+
+    public String getLatestForgeVersion(String version){
+        String out = "";
+
+        String versionKeyRecommended = version + "-recommended";
+        String versionKeyLatest = version + "-latest";
+
+        try {
+            URL url = new URL("https://files.minecraftforge.net/net/minecraftforge/forge/promotions_slim.json");
+            BufferedReader reader = new BufferedReader(new InputStreamReader(url.openStream()));
+
+            StringBuilder json = new StringBuilder();
+            String line;
+
+            while ((line = reader.readLine()) != null) {
+                json.append(line);
+            }
+            reader.close();
+
+            JSONObject obj = new JSONObject(json.toString());
+            JSONObject promos = obj.getJSONObject("promos");
+
+            String forgeVersion;
+
+            forgeVersion = promos.getString(versionKeyLatest);
+
+            out = forgeVersion;
+        } catch (Exception e){
+            throw new RuntimeException(e);
+        }
+        return out;
     }
 
     public String getBestForgeVersion(String version){

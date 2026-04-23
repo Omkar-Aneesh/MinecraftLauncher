@@ -231,6 +231,8 @@ public class ForgeRunner {
 
             deleteInstaller();
 
+            currentSituationString = "";
+
 //            if (exit != 0) {
 //                throw new RuntimeException("Forge install failed!");
 //            }

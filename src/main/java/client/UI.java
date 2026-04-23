@@ -15,6 +15,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.List;
 import java.util.Scanner;
 
 public class UI {
@@ -28,6 +29,9 @@ public class UI {
     boolean inOptionsPanel = false;
     boolean progressBar = false;
     boolean installingMinecraft = false;
+    boolean loadingModLoaderVersions = false;
+    boolean drawPleaseSelectVersion = false;
+    boolean modLoaderVersionListFailed = false;
 
     boolean enteringInstallationName = false;
     boolean enteringUserName = false;
@@ -42,6 +46,8 @@ public class UI {
     String version = "";
     String modLoader = "";
     String modLoaderVersion = "";
+    String bestModLoaderVersion = "";
+    String latestModLoaderVersion = "";
 
     int versionIndexForOptions;
     int versionYForOptions;
@@ -52,6 +58,7 @@ public class UI {
     long installEta;
 
     String[] modLoaderNameList = new String[3];
+    List<String> modLoaderVersionsForMCVersion;
 
     StringBuilder usernameBuffer = new StringBuilder();
     StringBuilder installationNameBuffer = new StringBuilder();
@@ -61,6 +68,7 @@ public class UI {
     int maxCursorIntervals = 30;
 
     int versionOffset = 0;
+    int modLoaderVersionOffset = 0;
 
     int versionSelectionPanelWidth = 491;
     int versionSelectionPanelHeight = 481;
@@ -69,7 +77,7 @@ public class UI {
     int modLoaderSelectionPanelHeight = 121;
 
     int modLoaderVersionSelectionPanelWidth = 491;
-    int modLoaderVersionSelectionPanelHeight = 481;
+    int modLoaderVersionSelectionPanelHeight = 401;
 
     int optionsPanelWidth = 100;
     int optionPanelHeight = 40;
@@ -92,7 +100,7 @@ public class UI {
     ForgeRunner forgeRunner = new ForgeRunner();
 
     ArrayList<String> versionList = new ArrayList<>();
-    ArrayList<String> modLoaderList = new ArrayList<>();
+//    ArrayList<String> modLoaderList = new ArrayList<>();
     ArrayList<String> versionPlayList = new ArrayList<>();
     ArrayList<String> versionNameList = new ArrayList<>();
 
@@ -481,8 +489,8 @@ public class UI {
             if (versionOffset >= 0){
                 versionOffset = 0;
             }
-            if (versionOffset < -versionList.size() * height){
-                versionOffset = versionList.size() * height;
+            if (versionOffset < versionSelectionPanelHeight - (versionList.size() * height)){
+                versionOffset = versionSelectionPanelHeight - (versionList.size() * height);
             }
 
             int BoxY = versionOffset;
@@ -511,6 +519,29 @@ public class UI {
                                     }
                                 }
                             }
+
+                            if (modLoaderVersionListFailed) {
+
+                            }
+
+                            new Thread(() -> {
+                                loadingModLoaderVersions = true;
+                                if (modLoader.equals("Forge")) {
+                                    try {
+                                        forgeInstaller.getAllVersionList();
+                                        drawPleaseSelectVersion = false;
+                                        modLoaderVersionsForMCVersion = forgeInstaller.forgeMap.get(version);
+                                        modLoaderVersion = forgeInstaller.getBestForgeVersion(version);
+                                        bestModLoaderVersion = forgeInstaller.getBestForgeVersion(version);
+                                        latestModLoaderVersion = forgeInstaller.getLatestForgeVersion(version);
+                                    } catch (Exception e){
+
+                                    }
+                                }
+                                loadingModLoaderVersions = false;
+                                modLoaderVersionListFailed = false;
+                            }).start();
+
                             inVersionSelectionMode = false;
                             Main.env.gamePanel.mouseH.pressed = false;
                         }
@@ -597,6 +628,29 @@ public class UI {
 //                                    }
 //                                }
 //                            }
+
+                            new Thread(() -> {
+                                loadingModLoaderVersions = true;
+                                if (modLoader.equals("Forge")) {
+                                    forgeInstaller.getAllVersionList();
+                                    if (!version.isEmpty()) {
+                                        try {
+                                            drawPleaseSelectVersion = false;
+                                            modLoaderVersionsForMCVersion = forgeInstaller.forgeMap.get(version);
+                                            modLoaderVersion = forgeInstaller.getBestForgeVersion(version);
+                                            bestModLoaderVersion = forgeInstaller.getBestForgeVersion(version);
+                                            latestModLoaderVersion = forgeInstaller.getLatestForgeVersion(version);
+                                        } catch (Exception e){
+                                            modLoaderVersionListFailed = true;
+                                        }
+                                    } else {
+                                        drawPleaseSelectVersion = true;
+                                        modLoaderVersionListFailed = true;
+                                    }
+                                }
+                                loadingModLoaderVersions = false;
+                            }).start();
+
                             inModLoaderSelectionMode = false;
                             Main.env.gamePanel.mouseH.pressed = false;
                         }
@@ -617,7 +671,7 @@ public class UI {
         int x = boxX + (boxWidth/2) - (width/2);
         int y = boxY + lastBoxHeight + 10;
 
-        if (modLoaderList.isEmpty()){
+        if (modLoaderVersionsForMCVersion == null){
             gp.setColor(Color.DARK_GRAY);
         } else {
             gp.setColor(Color.GRAY);
@@ -628,43 +682,61 @@ public class UI {
 
         gp.set_font(gp.getFont().deriveFont(30f));
         String string;
-        if (modLoaderList.isEmpty()){
+        if (modLoaderVersionsForMCVersion == null && !loadingModLoaderVersions && !drawPleaseSelectVersion){
             string = "No Mod Loader Versions";
             gp.setColor(Color.GRAY);
-        } else if (modLoaderVersion.isEmpty()){
+        } else if (modLoaderVersion == null){
             string = "Select Mod Loader Version";
             gp.setColor(Color.darkGray);
+        } else if(loadingModLoaderVersions){
+            string = "Loading Mod Loader Versions...";
+        } else if(drawPleaseSelectVersion){
+            string = "Please Select Minecraft Version";
         } else {
-            string = modLoaderVersion;
+            String extra = "";
+
+            if (modLoader.equals("Forge") && !version.isEmpty()){
+                if (modLoaderVersion.equals(bestModLoaderVersion)){
+                    extra = "(Recommended)";
+                }
+
+                if (modLoaderVersion.equals(latestModLoaderVersion)){
+                    extra = "(Latest)";
+                }
+            }
+
+            string = modLoaderVersion + " " + extra;
             gp.setColor(Color.white);
         }
         gp.drawString(string, x, y + 30);
 
         if (Main.env.gamePanel.mouseH.pressed) {
-            if (main.mouseEvents.isMouseCollidingWith(x, y, width, height) && !inVersionSelectionMode && !inModLoaderSelectionMode && !modLoaderList.isEmpty()) {
+            if (main.mouseEvents.isMouseCollidingWith(x, y, width, height) && !inVersionSelectionMode && !inModLoaderSelectionMode && modLoaderVersionsForMCVersion != null) {
                 g4.setColor(Color.BLACK);
                 g4.fillRect(0, 0, modLoaderVersionSelectionPanelHeight, modLoaderVersionSelectionPanelHeight);
                 inModLoaderVersionSelectionMode = !inModLoaderVersionSelectionMode;
                 Main.env.gamePanel.mouseH.pressed = false;
-            } else {
+            } else if (!main.mouseEvents.isMouseCollidingWith(x, y + height, modLoaderVersionSelectionPanelWidth, modLoaderVersionSelectionPanelHeight)){
                 inModLoaderVersionSelectionMode = false;
             }
         }
         if (inModLoaderVersionSelectionMode){
-//            versionOffset -= main.mouseEvents.scroll * height;
-//            main.mouseEvents.scroll = 0;
+            modLoaderVersionOffset -= main.mouseEvents.scroll * height;
+            main.mouseEvents.scroll = 0;
 
-//            if (versionOffset >= 0){
-//                versionOffset = 0;
-//            }
-//            if (versionOffset < -versionList.size() * height){
-//                versionOffset = versionList.size() * height;
-//            }
+            if (modLoaderVersionOffset >= 0){
+                modLoaderVersionOffset = 0;
+            }
+            if (modLoaderVersionOffset < (modLoaderVersionSelectionPanelHeight) - (modLoaderVersionsForMCVersion.size() * height)){
+                modLoaderVersionOffset = (modLoaderVersionSelectionPanelHeight) - (modLoaderVersionsForMCVersion.size() * height);
+            }
 
-//            int BoxY = versionOffset;
-            int BoxY = 0;
+//            System.out.println((modLoaderVersionSelectionPanelHeight - height) - (modLoaderVersionsForMCVersion.size() * height) + " : " + modLoaderVersionOffset);
 
-            for (int i = 0; i < modLoaderList.size(); i ++){
+            int BoxY = modLoaderVersionOffset;
+//            int BoxY = 0;
+
+            for (int i = 0; i < modLoaderVersionsForMCVersion.size(); i ++){
                 g4.setColor(Color.GRAY);
                 g4.fillRect(0, BoxY, width, height);
                 g4.setColor(Color.BLACK);
@@ -672,12 +744,25 @@ public class UI {
 
                 g4.setColor(Color.WHITE);
                 g4.setFont(g2.getFont().deriveFont(30f));
-                g4.drawString(modLoaderList.get(i), 0, BoxY + 30);
+
+                String extra = "";
+
+                if (modLoader.equals("Forge") && !version.isEmpty()){
+                    if (modLoaderVersionsForMCVersion.get(i).equals(bestModLoaderVersion)){
+                        extra = "(Recommended)";
+                    }
+
+                    if (modLoaderVersionsForMCVersion.get(i).equals(latestModLoaderVersion)){
+                        extra = "(Latest)";
+                    }
+                }
+
+                g4.drawString(modLoaderVersionsForMCVersion.get(i) + " " + extra, 0, BoxY + 30);
 
                 if (Main.env.gamePanel.mouseH.pressed) {
                     if (Main.env.gamePanel.mouseH.moveY > y + height && Main.env.gamePanel.mouseH.moveY < y + height + versionSelectionPanelHeight) {
                         if (main.mouseEvents.isMouseCollidingWith(x, BoxY + y + height, width, height)) {
-                            modLoaderVersion = modLoaderList.get(i);
+                            modLoaderVersion = modLoaderVersionsForMCVersion.get(i);
 //                            File file = new File("minecraft/versions");
 //                            String[] fileList = file.list();
 //                            if (fileList != null) {
@@ -721,57 +806,61 @@ public class UI {
 
         gp.drawString(string, x + (width/2) - (getStringWidth(string)/2), y + 30);
 
-        if (Main.env.gamePanel.mouseH.pressed && !inVersionSelectionMode) {
+        if (Main.env.gamePanel.mouseH.pressed && !inVersionSelectionMode && !inModLoaderVersionSelectionMode) {
             if (main.mouseEvents.isMouseCollidingWith(x, y, width, height)) {
                 if (modLoader.equals("Vanilla")) {
-                    minecraftInstaller.setProcessListener((done, total, speed, eta) -> {
-                        SwingUtilities.invokeLater(() -> {
-                            this.installDone = done;
-                            this.installTotal = total;
-                            this.installSpeed = speed;
-                            this.installEta = eta;
+                    if (!version.isEmpty() && !installationName.isEmpty()) {
+                        minecraftInstaller.setProcessListener((done, total, speed, eta) -> {
+                            SwingUtilities.invokeLater(() -> {
+                                this.installDone = done;
+                                this.installTotal = total;
+                                this.installSpeed = speed;
+                                this.installEta = eta;
+                            });
                         });
-                    });
 
-                    installingMinecraft = true;
-                    new Thread(() -> {
-                        try {
-                            minecraftInstaller.install(version);
-                            FileWriter fileWriter = new FileWriter("minecraft/versionNames.txt", true);
-                            fileWriter.write(version + ":" + installationName + "\n");
-                            fileWriter.close();
-                            progressBar = false;
-                            installingMinecraft = false;
-                            loadVersionPlayList();
-                        } catch (Exception e) {
-                            throw new RuntimeException(e);
-                        }
-                    }).start();
+                        installingMinecraft = true;
+                        new Thread(() -> {
+                            try {
+                                minecraftInstaller.install(version);
+                                FileWriter fileWriter = new FileWriter("minecraft/versionNames.txt", true);
+                                fileWriter.write(version + ":" + installationName + "\n");
+                                fileWriter.close();
+                                progressBar = false;
+                                installingMinecraft = false;
+                                loadVersionPlayList();
+                            } catch (Exception e) {
+                                throw new RuntimeException(e);
+                            }
+                        }).start();
+                    }
                 } else if (modLoader.equals("Forge")) {
-                    forgeInstaller.setProcessListener((done, total, speed, eta) -> {
-                        SwingUtilities.invokeLater(() -> {
-                            this.installDone = done;
-                            this.installTotal = total;
-                            this.installSpeed = speed;
-                            this.installEta = eta;
+                    if (!modLoaderVersion.isEmpty() && !version.isEmpty() && !installationName.isEmpty()) {
+                        forgeInstaller.setProcessListener((done, total, speed, eta) -> {
+                            SwingUtilities.invokeLater(() -> {
+                                this.installDone = done;
+                                this.installTotal = total;
+                                this.installSpeed = speed;
+                                this.installEta = eta;
+                            });
                         });
-                    });
 
-                    installingMinecraft = true;
-                    new Thread(() -> {
-                        try {
-                            String forgeVersion = forgeInstaller.install(version);
-                            forgeRunner.run(version, forgeVersion);
-                            FileWriter fileWriter = new FileWriter("minecraft/versionNames.txt", true);
-                            fileWriter.write(version + "-forge-" + forgeVersion + ":" + installationName + "\n");
-                            fileWriter.close();
-                            progressBar = false;
-                            installingMinecraft = false;
-                            loadVersionPlayList();
-                        } catch (Exception e) {
-                            throw new RuntimeException(e);
-                        }
-                    }).start();
+                        installingMinecraft = true;
+                        new Thread(() -> {
+                            try {
+                                forgeInstaller.install(version, modLoaderVersion);
+                                forgeRunner.run(version, modLoaderVersion);
+                                FileWriter fileWriter = new FileWriter("minecraft/versionNames.txt", true);
+                                fileWriter.write(version + "-forge-" + modLoaderVersion + ":" + installationName + "\n");
+                                fileWriter.close();
+                                progressBar = false;
+                                installingMinecraft = false;
+                                loadVersionPlayList();
+                            } catch (Exception e) {
+                                throw new RuntimeException(e);
+                            }
+                        }).start();
+                    }
                 }
 
                 Main.env.gamePanel.mouseH.pressed = false;
