@@ -32,6 +32,8 @@ public class MinecraftInstaller {
     public String install(String version) throws Exception {
         String outString = "";
 
+        MC_DIR = "minecraft/" + version;
+
         currentSituationString = "Fetching Versions";
 
         JSONObject manifest = readJson("https://launchermeta.mojang.com/mc/game/version_manifest.json");

@@ -13,7 +13,9 @@ import java.util.jar.JarFile;
 
 public class ForgeRunner {
 
-    public String currentSituationString = "Initializing Forge";
+    String MC_DIR = "minecraft";
+
+    public String currentSituationString = "";
 
     public static void main(String[] args) {
         ForgeRunner forgeRunner = new ForgeRunner();
@@ -21,7 +23,8 @@ public class ForgeRunner {
     }
 
     public void deleteInstaller(){
-        File installer = new File("minecraft/forge-installer.jar");
+        System.out.println(MC_DIR);
+        File installer = new File(MC_DIR + "/forge-installer.jar");
 
         if (installer.exists()){
             boolean deleted = installer.delete();
@@ -33,9 +36,13 @@ public class ForgeRunner {
     }
 
     public void run(String mcVersion, String forgeVersion){
+
+        MC_DIR = "minecraft/" + mcVersion + "-forge-" + forgeVersion;
+
+        currentSituationString = "Initializing Forge";
 //        String versionId = mcVersion + "-forge-" + forgeVersion;
 //
-        String mcDir = "minecraft"; // root folder
+         // root folder
 //        String installerPath = mcDir + "/forge-installer.jar";
 //
 //        // temp file
@@ -55,8 +62,8 @@ public class ForgeRunner {
 //        downloadLibraries(finalJson, mcDir);
 //
 //        // 5. Run installer (IMPORTANT)
-        createLauncherProfile("minecraft");
-        runJar(mcDir);
+        createLauncherProfile(MC_DIR);
+        runJar();
 
         System.out.println("✅ Forge setup complete");
     }
@@ -191,8 +198,8 @@ public class ForgeRunner {
         }
     }
 
-    public void runJar(String mcDir){
-        File file = new File(mcDir);
+    public void runJar(){
+        File file = new File(MC_DIR);
 
         currentSituationString = "Running Forge Installer";
 
@@ -206,7 +213,7 @@ public class ForgeRunner {
 //                    "minecraft"
             );
 
-            pb.directory(new File(mcDir));
+            pb.directory(new File(MC_DIR));
 
             pb.redirectErrorStream(true);
             Process process = pb.start();
@@ -222,6 +229,9 @@ public class ForgeRunner {
                 }
                 if (line.contains("Patching")){
                     currentSituationString = "Patching Minecraft";
+                }
+                if (line.contains("Download")){
+
                 }
             }
 

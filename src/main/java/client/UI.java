@@ -173,6 +173,9 @@ public class UI {
     }
 
     public void drawProgressBar(){
+
+//        System.out.println(forgeInstaller.currentSituationString + " : "  + forgeRunner.currentSituationString + " : ");
+
         int width = 1199;
         int height = 40;
         int x = 0;
@@ -211,15 +214,21 @@ public class UI {
         }
 
         if (modLoader.equals("Forge")){
-            if (forgeRunner.currentSituationString.isEmpty()) {
+            if (forgeInstaller.currentSituationString.isEmpty()) {
                 if (installingMinecraft) {
-                    str = "[" + installDone + "/" + installTotal + "] " + (int) progressPercentage + "% | " +
-                            String.format("%.2f MB/s", installSpeed) + " | ETA: " + installEta + "s";
+                    if (forgeRunner.currentSituationString.isEmpty()) {
+                        str = "[" + installDone + "/" + installTotal + "] " + (int) progressPercentage + "% | " +
+                                String.format("%.2f MB/s", installSpeed) + " | ETA: " + installEta + "s";
+                    } else {
+                        str = forgeRunner.currentSituationString;
+                    }
+                }
+            } else {
+                if (!MinecraftLauncher.currentSituationString.isEmpty()){
+                    str = MinecraftLauncher.currentSituationString;
                 } else {
                     str = forgeInstaller.currentSituationString;
                 }
-            } else {
-                str = forgeRunner.currentSituationString;
             }
         }
 

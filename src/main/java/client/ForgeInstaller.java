@@ -43,6 +43,7 @@ public class ForgeInstaller {
     }
 
     public String install(String version){
+        MC_DIR = "minecraft/" + version;
         currentSituationString = "Creating Directories";
         try {
             Files.createDirectories(Paths.get("minecraft/versions", version));
@@ -66,25 +67,29 @@ public class ForgeInstaller {
         return forgeVersion;
     }
 
-    public void install(String version, String forgeVersion){
+    public void install(String v, String forgeVersion){
+        String version = v + "-forge-" + forgeVersion;
+        MC_DIR = "minecraft/" + version;
         currentSituationString = "Creating Directories";
         try {
-            Files.createDirectories(Paths.get("minecraft/versions", version));
+            Files.createDirectories(Paths.get(MC_DIR, "versions", version));
         } catch (Exception e){
             throw new RuntimeException(e);
         }
 
         currentSituationString = "Installing Minecraft";
 
-        installVanilla(version);
+        installVanilla(v);
 
         currentSituationString = "Installing Forge";
 
         try {
-            download(version, forgeVersion);
+            download(v, forgeVersion);
         } catch (Exception e){
             throw new RuntimeException(e);
         }
+
+        currentSituationString = "";
 //        System.out.println(forgeVersion);
     }
 
@@ -97,6 +102,7 @@ public class ForgeInstaller {
     }
 
     public void installVanilla(String version){
+
         try {
             JSONObject manifest = readJson("https://launchermeta.mojang.com/mc/game/version_manifest.json");
 
@@ -167,6 +173,8 @@ public class ForgeInstaller {
             AtomicLong bytesDownloaded = new AtomicLong(0);
             long startTime = System.currentTimeMillis();
 
+            currentSituationString = "";
+
             for (String key: objects.keySet()){
                 JSONObject obj = objects.getJSONObject(key);
 
@@ -180,6 +188,7 @@ public class ForgeInstaller {
                     try{
                         if (Files.exists(out)){
                             int current = done.incrementAndGet();
+                            System.out.println(out.toString());
                             return;
                         }
 
@@ -211,7 +220,6 @@ public class ForgeInstaller {
             pool.awaitTermination(Long.MAX_VALUE, TimeUnit.SECONDS);
 //            System.out.println("Minecraft " + version + " Installed!");
 
-            MC_DIR = "minecraft";
         } catch (Exception e){
             throw new RuntimeException(e);
         }
@@ -227,7 +235,7 @@ public class ForgeInstaller {
             int fileSize = conn.getContentLength();
 
             InputStream in = conn.getInputStream();
-            FileOutputStream out = new FileOutputStream("minecraft/forge-installer.jar");
+            FileOutputStream out = new FileOutputStream(MC_DIR + "/forge-installer.jar");
 
             byte[] buffer = new byte[4096];
             int bytesRead;
@@ -238,7 +246,7 @@ public class ForgeInstaller {
                 totalRead += bytesRead;
 
                 int progress = (int)((totalRead * 100L) / fileSize);
-//                System.out.println("downloading: " + progress + "%");
+                System.out.println("downloading: " + progress + "%");
             }
 
             out.close();

@@ -29,6 +29,8 @@ public class MinecraftLauncher {
     public static String currentSituationString = "";
 
     public void run(String version, String username) {
+
+        MC_DIR = "minecraft/" + version;
         try {
             if (version.contains("forge")) {
                 launchForge(version, username);
@@ -49,21 +51,19 @@ public class MinecraftLauncher {
         Path versionDir = Paths.get(MC_DIR, "versions", version);
         JSONObject versionJson = new JSONObject( Files.readString(versionDir.resolve(version + ".json")) );
 
-        JSONObject client;
+//        if (versionJson.has("inheritsFrom")){
+//            String baseVersion = versionJson.getString("inheritsFrom");
+//
+//            Path basePath = Paths.get(MC_DIR, "versions", baseVersion, baseVersion + ".json");
+//
+//            JSONObject baseJson = new JSONObject(Files.readString(basePath));
+//
+//            System.out.println(baseJson.toString(2));
+//
+//            client = baseJson.getJSONObject("downloads").getJSONObject("client");
+//        }
 
-        if (versionJson.has("inheritsFrom")){
-            String baseVersion = versionJson.getString("inheritsFrom");
-
-            Path basePath = Paths.get(MC_DIR, "versions", baseVersion, baseVersion + ".json");
-
-            JSONObject baseJson = new JSONObject(Files.readString(basePath));
-
-            System.out.println(baseJson.toString(2));
-
-            client = baseJson.getJSONObject("downloads").getJSONObject("client");
-        } else {
-            client = versionJson.getJSONObject("downloads").getJSONObject("client");
-        }
+        JSONObject client = versionJson.getJSONObject("downloads").getJSONObject("client");;
 
         String url = client.getString("url");
         String sha1 = client.getString("sha1");
@@ -173,8 +173,6 @@ public class MinecraftLauncher {
         ProcessBuilder pb = new ProcessBuilder(command);
         pb.inheritIO();
         pb.start();
-
-        MC_DIR = "minecraft";
 
     }
 
@@ -308,7 +306,7 @@ public class MinecraftLauncher {
 
         currentSituationString = "Overriding Minecraft Things";
 
-        command.add("-Xms2G");
+//        command.add("-Xms2G");
 
         command.add("-Djava.library.path=" + nativesDir.toAbsolutePath());
 
@@ -420,8 +418,6 @@ public class MinecraftLauncher {
                 cp.append(libPath.toAbsolutePath()).append(sep);
             }
         }
-
-        MC_DIR = "minecraft";
 
         Path jar = Paths.get(MC_DIR, "versions", version, version + ".jar");
         cp.append(jar.toAbsolutePath());
