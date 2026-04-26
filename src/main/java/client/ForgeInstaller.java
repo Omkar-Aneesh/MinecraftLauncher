@@ -188,7 +188,7 @@ public class ForgeInstaller {
                     try{
                         if (Files.exists(out)){
                             int current = done.incrementAndGet();
-                            System.out.println(out.toString());
+//                            System.out.println(out.toString());
                             return;
                         }
 

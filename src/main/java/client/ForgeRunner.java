@@ -230,8 +230,8 @@ public class ForgeRunner {
                 if (line.contains("Patching")){
                     currentSituationString = "Patching Minecraft";
                 }
-                if (line.contains("Download")){
-
+                if (line.contains("Downloading")){
+                    currentSituationString = "Downloading Essentials";
                 }
             }
 

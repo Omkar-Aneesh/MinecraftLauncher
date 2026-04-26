@@ -41,7 +41,12 @@ public class UI {
     boolean showUsernameCursor = true;
     boolean showInstallationNameCursor = true;
 
-    String username = "Aneesh015";
+    boolean nameNotEntered = false;
+    boolean versionNotSelected = false;
+    boolean modLoaderNotSelected = false;
+    boolean modLoaderVersionNotSelected = false;
+
+    String username = "game_mi";
     String installationName = "";
     String version = "";
     String modLoader = "";
@@ -98,6 +103,7 @@ public class UI {
     MinecraftInstaller minecraftInstaller = new MinecraftInstaller();
     ForgeInstaller forgeInstaller = new ForgeInstaller();
     ForgeRunner forgeRunner = new ForgeRunner();
+    FabricList fabricList = new FabricList();
 
     ArrayList<String> versionList = new ArrayList<>();
 //    ArrayList<String> modLoaderList = new ArrayList<>();
@@ -310,6 +316,11 @@ public class UI {
         gp.setColor(Color.black);
         gp.drawRect(x, y, width, height);
 
+        if (nameNotEntered){
+            gp.setColor(Color.RED);
+            gp.drawRect(x, y, width, height);
+        }
+
         String InstallationNameStr = installationName;
         gp.setColor(Color.WHITE);
 
@@ -332,6 +343,10 @@ public class UI {
             } else {
                 enteringInstallationName = false;
                 installationName = installationNameBuffer.toString();
+                modLoaderNotSelected = modLoader.isEmpty();
+                versionNotSelected = version.isEmpty();
+                nameNotEntered = installationName.isEmpty();
+                modLoaderVersionNotSelected = modLoaderVersion.isEmpty();
             }
         }
 
@@ -354,9 +369,17 @@ public class UI {
                     }
                 } else if (gp.keyPressCode == KeyEvent.VK_ENTER) {
                     installationName = installationNameBuffer.toString();
+                    modLoaderNotSelected = modLoader.isEmpty();
+                    versionNotSelected = version.isEmpty();
+                    nameNotEntered = installationName.isEmpty();
+                    modLoaderVersionNotSelected = modLoaderVersion.isEmpty();
                     enteringInstallationName = false;
                 } else if (gp.keyPressCode == KeyEvent.VK_ESCAPE) {
                     installationName = installationNameBuffer.toString();
+                    modLoaderNotSelected = modLoader.isEmpty();
+                    versionNotSelected = version.isEmpty();
+                    nameNotEntered = installationName.isEmpty();
+                    modLoaderVersionNotSelected = modLoaderVersion.isEmpty();
                     enteringUserName = false;
                 }else if (Character.isLetterOrDigit(gp.keyPressChar) || gp.keyPressChar == '.' || gp.keyPressChar == '-'){
                     installationNameBuffer.append(gp.keyPressChar);
@@ -468,6 +491,11 @@ public class UI {
         gp.setColor(Color.black);
         gp.drawRect(x, y, width, height);
 
+        if (versionNotSelected){
+            gp.setColor(Color.RED);
+            gp.drawRect(x, y, width, height);
+        }
+
         gp.set_font(gp.getFont().deriveFont(30f));
 
         String string;
@@ -547,9 +575,26 @@ public class UI {
 
                                     }
                                 }
+                                if (modLoader.equals("Fabric")) {
+                                    try {
+                                        fabricList.fetchLoaderVersions(version);
+                                        drawPleaseSelectVersion = false;
+                                        modLoaderVersionsForMCVersion = fabricList.loaderVersions;
+                                        modLoaderVersion = fabricList.bestVersion;
+                                        bestModLoaderVersion = fabricList.bestVersion;
+                                        latestModLoaderVersion = fabricList.latestVersion;
+                                    } catch (Exception e){
+                                        throw new RuntimeException(e);
+                                    }
+                                }
                                 loadingModLoaderVersions = false;
                                 modLoaderVersionListFailed = false;
                             }).start();
+
+                            modLoaderNotSelected = modLoader.isEmpty();
+                            versionNotSelected = version.isEmpty();
+                            nameNotEntered = installationName.isEmpty();
+                            modLoaderVersionNotSelected = modLoaderVersion.isEmpty();
 
                             inVersionSelectionMode = false;
                             Main.env.gamePanel.mouseH.pressed = false;
@@ -577,6 +622,11 @@ public class UI {
         gp.drawRect(x, y, width, height);
 
         gp.set_font(gp.getFont().deriveFont(30f));
+
+        if (modLoaderNotSelected){
+            gp.setColor(Color.RED);
+            gp.drawRect(x, y, width, height);
+        }
 
         String string;
 
@@ -657,9 +707,30 @@ public class UI {
                                         modLoaderVersionListFailed = true;
                                     }
                                 }
+                                if (modLoader.equals("Fabric")) {
+                                    if (!version.isEmpty()) {
+                                        try {
+                                            fabricList.fetchLoaderVersions(version);
+                                            drawPleaseSelectVersion = false;
+                                            modLoaderVersionsForMCVersion = fabricList.loaderVersions;
+                                            modLoaderVersion = fabricList.bestVersion;
+                                            bestModLoaderVersion = fabricList.bestVersion;
+                                            latestModLoaderVersion = fabricList.latestVersion;
+                                        } catch (Exception e) {
+                                            modLoaderVersionListFailed = true;
+                                        }
+                                    } else {
+                                        drawPleaseSelectVersion = true;
+                                        modLoaderVersionListFailed = true;
+                                    }
+                                }
                                 loadingModLoaderVersions = false;
                             }).start();
 
+                            modLoaderNotSelected = modLoader.isEmpty();
+                            versionNotSelected = version.isEmpty();
+                            nameNotEntered = installationName.isEmpty();
+                            modLoaderVersionNotSelected = modLoaderVersion.isEmpty();
                             inModLoaderSelectionMode = false;
                             Main.env.gamePanel.mouseH.pressed = false;
                         }
@@ -675,6 +746,7 @@ public class UI {
         return height;
     }
     public int drawModLoaderVersionSelector(int boxX, int boxY, int boxWidth, int boxHeight, int lastBoxHeight){
+//        System.out.println(modLoaderVersionsForMCVersion);
         int width = boxWidth - 10;
         int height = 40;
         int x = boxX + (boxWidth/2) - (width/2);
@@ -688,6 +760,11 @@ public class UI {
         gp.fillRect(x, y, width, height);
         gp.setColor(Color.black);
         gp.drawRect(x, y, width, height);
+
+        if (modLoaderVersionNotSelected){
+            gp.setColor(Color.RED);
+            gp.drawRect(x, y, width, height);
+        }
 
         gp.set_font(gp.getFont().deriveFont(30f));
         String string;
@@ -704,9 +781,12 @@ public class UI {
         } else {
             String extra = "";
 
-            if (modLoader.equals("Forge") && !version.isEmpty()){
+            if (modLoader.equals("Forge") || modLoader.equals("Fabric") && !version.isEmpty()){
                 if (modLoaderVersion.equals(bestModLoaderVersion)){
                     extra = "(Recommended)";
+                    if (modLoaderVersion.equals(latestModLoaderVersion)){
+                        extra = "(Latest, Recommended)";
+                    }
                 }
 
                 if (modLoaderVersion.equals(latestModLoaderVersion)){
@@ -756,15 +836,20 @@ public class UI {
 
                 String extra = "";
 
-                if (modLoader.equals("Forge") && !version.isEmpty()){
+                if (modLoader.equals("Forge") || modLoader.equals("Fabric") && !version.isEmpty()){
                     if (modLoaderVersionsForMCVersion.get(i).equals(bestModLoaderVersion)){
                         extra = "(Recommended)";
+                        if (modLoaderVersion.equals(latestModLoaderVersion)){
+                            extra = "(Latest, Recommended)";
+                        }
                     }
 
                     if (modLoaderVersionsForMCVersion.get(i).equals(latestModLoaderVersion)){
                         extra = "(Latest)";
                     }
                 }
+
+//                System.out.println(extra);
 
                 g4.drawString(modLoaderVersionsForMCVersion.get(i) + " " + extra, 0, BoxY + 30);
 
@@ -782,6 +867,10 @@ public class UI {
 //                                    }
 //                                }
 //                            }
+                            modLoaderNotSelected = modLoader.isEmpty();
+                            versionNotSelected = version.isEmpty();
+                            nameNotEntered = installationName.isEmpty();
+                            modLoaderVersionNotSelected = modLoaderVersion.isEmpty();
                             inModLoaderVersionSelectionMode = false;
                             Main.env.gamePanel.mouseH.pressed = false;
                         }
@@ -815,7 +904,8 @@ public class UI {
 
         gp.drawString(string, x + (width/2) - (getStringWidth(string)/2), y + 30);
 
-        if (Main.env.gamePanel.mouseH.pressed && !inVersionSelectionMode && !inModLoaderVersionSelectionMode) {
+        if (Main.env.gamePanel.mouseH.pressed && !inVersionSelectionMode && !inModLoaderVersionSelectionMode && !inModLoaderSelectionMode) {
+            boolean doNotClose = false;
             if (main.mouseEvents.isMouseCollidingWith(x, y, width, height)) {
                 if (modLoader.equals("Vanilla")) {
                     if (!version.isEmpty() && !installationName.isEmpty()) {
@@ -842,6 +932,10 @@ public class UI {
                                 throw new RuntimeException(e);
                             }
                         }).start();
+                    } else {
+                        doNotClose = true;
+                        versionNotSelected = version.isEmpty();
+                        nameNotEntered = installationName.isEmpty();
                     }
                 } else if (modLoader.equals("Forge")) {
                     if (!modLoaderVersion.isEmpty() && !version.isEmpty() && !installationName.isEmpty()) {
@@ -869,12 +963,56 @@ public class UI {
                                 throw new RuntimeException(e);
                             }
                         }).start();
+                    } else {
+                        doNotClose = true;
+                        versionNotSelected = version.isEmpty();
+                        nameNotEntered = installationName.isEmpty();
+                        modLoaderVersionNotSelected = modLoaderVersion.isEmpty();
                     }
+                } else if (modLoader.equals("Fabric")) {
+                    if (!modLoaderVersion.isEmpty() && !version.isEmpty() && !installationName.isEmpty()) {
+                        minecraftInstaller.setProcessListener((done, total, speed, eta) -> {
+                            SwingUtilities.invokeLater(() -> {
+                                this.installDone = done;
+                                this.installTotal = total;
+                                this.installSpeed = speed;
+                                this.installEta = eta;
+                            });
+                        });
+
+                        installingMinecraft = true;
+                        new Thread(() -> {
+                            try {
+                                minecraftInstaller.installFabric(version, modLoaderVersion);
+                                FileWriter fileWriter = new FileWriter("minecraft/versionNames.txt", true);
+                                fileWriter.write("fabric-loader-" + modLoaderVersion + "-" + version + ":" + installationName + "\n");
+                                fileWriter.close();
+                                progressBar = false;
+                                installingMinecraft = false;
+                                loadVersionPlayList();
+                            } catch (Exception e) {
+                                throw new RuntimeException(e);
+                            }
+                        }).start();
+                    } else {
+                        doNotClose = true;
+                        versionNotSelected = version.isEmpty();
+                        nameNotEntered = installationName.isEmpty();
+                        modLoaderVersionNotSelected = modLoaderVersion.isEmpty();
+                    }
+                } else {
+                    modLoaderNotSelected = modLoader.isEmpty();
+                    versionNotSelected = version.isEmpty();
+                    nameNotEntered = installationName.isEmpty();
+                    modLoaderVersionNotSelected = modLoaderVersion.isEmpty();
+                    doNotClose = true;
                 }
 
+                if (!doNotClose) {
+                    inNewInstallationMode = false;
+                    progressBar = true;
+                }
                 Main.env.gamePanel.mouseH.pressed = false;
-                inNewInstallationMode = false;
-                progressBar = true;
             }
         }
     }
@@ -965,7 +1103,7 @@ public class UI {
     }
 
     public void deleteVersion(String version){
-        try (var paths = Files.walk(Paths.get("minecraft", "versions", version))){
+        try (var paths = Files.walk(Paths.get("minecraft", version))){
             paths.sorted(Comparator.reverseOrder()).map(Path::toFile).forEach(java.io.File::delete);
 
             File file = new File("minecraft/versionNames.txt");

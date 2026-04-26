@@ -28,12 +28,19 @@ public class MinecraftLauncher {
 
     public static String currentSituationString = "";
 
+    static void main(String[] args) {
+        MinecraftLauncher minecraftLauncher = new MinecraftLauncher();
+        minecraftLauncher.run("fabric-loader-0.14.22-1.20.2", "Aneesh015");
+    }
+
     public void run(String version, String username) {
 
         MC_DIR = "minecraft/" + version;
         try {
             if (version.contains("forge")) {
                 launchForge(version, username);
+            } else if(version.contains("fabric")){
+                launchFabric(version, username);
             } else {
                 launch(version, username);
             }
@@ -370,7 +377,210 @@ public class MinecraftLauncher {
         pb.inheritIO();
         pb.start();
 
-        MC_DIR = "minecraft";
+//        MC_DIR = "minecraft";
+
+    }
+    public static void launchFabric(String v, String name) throws Exception{
+        username = name;
+        version = v;
+
+        currentSituationString = "Finding Version";
+
+        Path versionDir = Paths.get(MC_DIR, "versions", version);
+        JSONObject versionJson = new JSONObject( Files.readString(versionDir.resolve(version + ".json")) );
+
+        JSONObject merged = null;
+
+        JSONObject baseJson = new JSONObject();
+
+        String baseVersion = "";
+
+        JSONArray mergedLibs = new JSONArray();
+        JSONObject mergedArgs = new JSONObject();
+
+        if (versionJson.has("inheritsFrom")){
+            baseVersion = versionJson.getString("inheritsFrom");
+
+            Path basePath = Paths.get(MC_DIR, "versions", baseVersion, baseVersion + ".json");
+
+            baseJson = new JSONObject(Files.readString(basePath));
+
+            System.out.println(baseJson.toString(2));
+
+            merged = new JSONObject(baseJson.toString());
+
+            for (String key: versionJson.keySet()){
+                if (!key.equals("libraries") && !key.equals("arguments")){
+                    merged.put(key, versionJson.get(key));
+                }
+            }
+
+            //libraries
+
+            for (Object o: baseJson.getJSONArray("libraries")){
+                mergedLibs.put(o);
+            }
+
+            for (Object o: versionJson.getJSONArray("libraries")){
+                mergedLibs.put(o);
+            }
+
+            //arguments
+
+            if (baseJson.has("arguments")){
+                mergedArgs = new JSONObject(baseJson.getJSONObject("arguments").toString());
+//                for (Object o: baseJson.getJSONArray("arguments")) mergedArgs.put(o);
+            }
+
+            if (versionJson.has("arguments")){
+//                for (Object o: versionJson.getJSONArray("arguments")) mergedArgs.put(o);
+                JSONObject fabricArgs = versionJson.getJSONObject("arguments");
+
+                if (fabricArgs.has("jvm")){
+                    JSONArray jvm = new JSONArray();
+
+                    if (mergedArgs.has("jvm")) {
+                        for (Object o: mergedArgs.getJSONArray("jvm")) jvm.put(o);
+                    }
+
+                    for (Object o: fabricArgs.getJSONArray("jvm")) jvm.put(o);
+
+                    mergedArgs.put("jvm", jvm);
+                }
+
+                if (fabricArgs.has("game")){
+                    JSONArray game = new JSONArray();
+
+                    if (mergedArgs.has("game")){
+                        for (Object o: mergedArgs.getJSONArray("game")) game.put(o);
+                    }
+
+                    for (Object o: fabricArgs.getJSONArray("game")) game.put(o);
+
+                    mergedArgs.put("game", game);
+                }
+            }
+
+            merged.put("libraries", mergedLibs);
+            merged.put("arguments", mergedArgs);
+        }
+
+        JSONObject client = merged.getJSONObject("downloads").getJSONObject("client");
+
+        String url = client.getString("url");
+        String sha1 = client.getString("sha1");
+
+        currentSituationString = "Finding Jar File";
+
+        Path jarPath = Paths.get(MC_DIR, "versions", version, version + ".jar");
+
+        if (!Files.exists(jarPath)){
+            jarPath = Paths.get(MC_DIR, "versions", baseVersion, baseVersion + ".jar");
+        }
+
+        if (!HashUtil.verifyFile(jarPath, sha1)){
+            FileDownloader.downloadFile(url, jarPath);
+        }
+
+        uuid = UUID.nameUUIDFromBytes(username.getBytes());
+
+        nativesDir = Paths.get(MC_DIR, "versions", version, "natives");
+        Files.createDirectories(nativesDir);
+
+        extractNatives(merged, nativesDir);
+
+        currentSituationString = "Building Classpath";
+
+        classpath = buildClasspath(merged, version);
+
+        String mainClass = merged.getString("mainClass");
+//        String mainClass = "cpw.mods.bootstraplauncher.BootstrapLauncher";
+
+        assetIndex = merged.getJSONObject("assetIndex").getString("id");
+
+        List<String> command = new ArrayList<>();
+
+        currentSituationString = "Adding Commands";
+
+        command.add("java");
+
+        currentSituationString = "Adding JVM Arguments";
+
+        if (merged.has("arguments")){
+            JSONObject args = merged.getJSONObject("arguments");
+
+            if (args.has("jvm")){
+                addArguments(command, args.getJSONArray("jvm"));
+            }
+        }
+
+        currentSituationString = "Overriding Minecraft Things";
+
+//        command.add("-Xms2G");
+
+        command.add("-Djava.library.path=" + nativesDir.toAbsolutePath());
+
+        command.add("-Dminecraft.api.session.host=http://localhost:8080");
+
+        command.add("-cp");
+        command.add(classpath);
+
+        command.add(mainClass);
+
+//        if (versionJson.has("arguments")){
+//            JSONObject args = merged.getJSONObject("arguments");
+//
+//            if (args.has("game")){
+//                addArguments(command, args.getJSONArray("game"));
+//            }
+//        }
+
+        currentSituationString = "Setting Up Game Arguments";
+
+        command.add("--username");
+        command.add(username);
+
+        command.add("--uuid");
+        command.add(uuid.toString());
+
+        command.add("--accessToken");
+        command.add("0");
+
+        command.add("--version");
+        command.add(version);
+
+//        command.add("--launchTarget");
+//        command.add("forge_client");
+
+//        MC_DIR = "minecraft/versions/" + version + "/res";
+
+        command.add("--gameDir");
+        command.add(MC_DIR);
+
+        command.add("--assetsDir");
+        command.add(Paths.get(MC_DIR, "assets").toString());
+
+        command.add("--assetIndex");
+        command.add(assetIndex);
+
+        command.add("--userType");
+        command.add("mojang");
+
+//        command.add("--server");
+//        command.add("127.0.0.1");
+//        command.add("--port");
+//        command.add("25565");
+
+//        command.add("--demo");
+//        command.add("false");
+
+        currentSituationString = "Launching Minecraft";
+
+        ProcessBuilder pb = new ProcessBuilder(command);
+        pb.inheritIO();
+        pb.start();
+
+//        MC_DIR = "minecraft";
 
     }
 
@@ -391,27 +601,68 @@ public class MinecraftLauncher {
                 }
             }
 
-            if (!lib.has("downloads")) continue;
-            JSONObject downloads = lib.getJSONObject("downloads");
+            Path libPath = null;
 
-            if (!downloads.has("artifact")) continue;
+            if (lib.has("downloads") && lib.getJSONObject("downloads").has("artifact")){
+                JSONObject artifact = lib.getJSONObject("downloads").getJSONObject("artifact");
 
-            JSONObject artifact = downloads.getJSONObject("artifact");
+                String path = artifact.getString("path");
+                String sha1 = artifact.getString("sha1");
+                String url = artifact.getString("url");
 
-            String path = artifact.getString("path");
-            String sha1 = artifact.getString("sha1");
-            String url = artifact.getString("url");
-
-            Path libPath = Paths.get(MC_DIR, "libraries", path);
-
-            if (!HashUtil.verifyFile(libPath, sha1)){
-                System.out.println("Downloading / Fixing: " + path);
-                FileDownloader.downloadFile(url, libPath);
+                libPath = Paths.get(MC_DIR, "libraries", path);
 
                 if (!HashUtil.verifyFile(libPath, sha1)){
-                    throw new RuntimeException("Corrupted download: " + path);
+                    System.out.println("Downloading / Fixing: " + path);
+                    FileDownloader.downloadFile(url, libPath);
+
+                    if (!HashUtil.verifyFile(libPath, sha1)){
+                        throw new RuntimeException("Corrupted download: " + path);
+                    }
                 }
+            } else if (lib.has("name")){
+                String name = lib.getString("name");
+                String[] parts = name.split(":");
+
+                String group = parts[0].replace('.', '/');
+                String artifact = parts[1];
+                String mavenVersion = parts[2];
+
+                String pathStr = group + "/" + artifact + "/" + mavenVersion + "/" + artifact + "-" + mavenVersion + ".jar";
+
+                libPath = Paths.get(MC_DIR, "libraries", pathStr);
+
+                if (!Files.exists(libPath)){
+                    String repo = lib.optString("url", "https://maven.fabricmc.net/");
+                    String url = repo + pathStr;
+
+                    System.out.println("Downloading MAven Lib: " + url);
+                    FileDownloader.downloadFile(url, libPath);
+                }
+
             }
+
+//            if (!lib.has("downloads")) continue;
+//            JSONObject downloads = lib.getJSONObject("downloads");
+//
+//            if (!downloads.has("artifact")) continue;
+//
+//            JSONObject artifact = downloads.getJSONObject("artifact");
+//
+//            String path = artifact.getString("path");
+//            String sha1 = artifact.getString("sha1");
+//            String url = artifact.getString("url");
+//
+//            Path libPath = Paths.get(MC_DIR, "libraries", path);
+//
+//            if (!HashUtil.verifyFile(libPath, sha1)){
+//                System.out.println("Downloading / Fixing: " + path);
+//                FileDownloader.downloadFile(url, libPath);
+//
+//                if (!HashUtil.verifyFile(libPath, sha1)){
+//                    throw new RuntimeException("Corrupted download: " + path);
+//                }
+//            }
 
             if (Files.exists(libPath)){
                 System.out.println("Adding to classpath: " + libPath);
@@ -420,6 +671,15 @@ public class MinecraftLauncher {
         }
 
         Path jar = Paths.get(MC_DIR, "versions", version, version + ".jar");
+
+        if (!Files.exists(jar)){
+            String baseVersion = versionJson.optString("inheritsFrom");
+
+            if (baseVersion != null){
+                jar = Paths.get(MC_DIR, "versions", baseVersion, baseVersion + ".jar");
+            }
+        }
+
         cp.append(jar.toAbsolutePath());
 
         return cp.toString();
@@ -518,12 +778,18 @@ public class MinecraftLauncher {
                     if (val instanceof String){
                         String argStr = replaceVars((String) val);
                         if (argStr.contains("quickPlay")) continue;
+                        if (argStr.equals("--demo")) continue;
+                        if (argStr.contains("server")) continue;
+                        if (argStr.contains("port")) continue;
                         cmd.add(argStr);
                     } else if (val instanceof JSONArray){
                         JSONArray arr = (JSONArray) val;
                         for (int j = 0; j < arr.length(); j ++){
                             String argStr = replaceVars(arr.getString(j));
                             if (argStr.contains("quickPlay")) continue;
+                            if (argStr.equals("--demo")) continue;
+                            if (argStr.contains("server")) continue;
+                            if (argStr.contains("port")) continue;
                             cmd.add(argStr);
                         }
                     }

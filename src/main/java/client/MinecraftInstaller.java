@@ -32,7 +32,9 @@ public class MinecraftInstaller {
     public String install(String version) throws Exception {
         String outString = "";
 
-        MC_DIR = "minecraft/" + version;
+        if (MC_DIR.equals("minecraft")) {
+            MC_DIR = "minecraft/" + version;
+        }
 
         currentSituationString = "Fetching Versions";
 
@@ -158,7 +160,154 @@ public class MinecraftInstaller {
         pool.awaitTermination(Long.MAX_VALUE, TimeUnit.SECONDS);
         System.out.println("Minecraft " + version + " Installed!");
 
-        MC_DIR = "minecraft";
+//        MC_DIR = "minecraft";
+
+        return outString;
+    }
+
+    public String installFabric(String mcVersion, String loaderVersion) throws Exception {
+        String outString = "";
+
+        MC_DIR = "minecraft/fabric-loader-" + loaderVersion + "-" + mcVersion;
+
+        String versionID = "fabric-loader-" + loaderVersion + "-" + mcVersion;
+
+        currentSituationString = "Fetching Versions";
+
+        JSONObject fabricJson = readJson("https://meta.fabricmc.net/v2/versions/loader/" + mcVersion + "/" + loaderVersion + "/profile/json");
+
+        String parentVersion = fabricJson.getString("inheritsFrom");
+
+        install(parentVersion);
+
+        Path parentPath = Paths.get(MC_DIR, "versions", parentVersion, parentVersion + ".json");
+        JSONObject parentJson = new JSONObject(Files.readString(parentPath));
+
+//        String versionUrl = null;
+//        for (Object o: manifest.getJSONArray("versions")){
+//            JSONObject v = (JSONObject) o;
+//            if (v.getString("id").equals(version)){
+//                versionUrl = v.getString("url");
+//                break;
+//            }
+//        }
+//
+//        JSONObject versionJson = readJson(versionUrl);
+
+        currentSituationString = "Creating Directories";
+
+        Path versionDir = Paths.get(MC_DIR, "versions", versionID);
+        Files.createDirectories(versionDir);
+//        MC_DIR = "minecraft/versions/" + version + "/res";
+//        Files.createDirectories(Paths.get(MC_DIR, "libraries"));
+//        Files.createDirectories(Paths.get(MC_DIR, "assets", "indexes"));
+//        Files.createDirectories(Paths.get(MC_DIR, "assets", "objects"));
+
+        Files.write(versionDir.resolve(versionID + ".json"), fabricJson.toString(2).getBytes());
+
+        currentSituationString = "Fetching Jar File";
+
+//        String jarUrl = fabricJson.getJSONObject("downloads").getJSONObject("client").getString("url");
+//        download(jarUrl, versionDir.resolve(versionID + ".jar"));
+
+        currentSituationString = "Downloading Dependencies";
+
+        JSONArray libs = fabricJson.getJSONArray("libraries");
+
+        for (int i = 0; i < libs.length(); i ++){
+            JSONObject lib = libs.getJSONObject(i);
+
+            currentSituationString = "Downloading Dependencies.";
+
+            if (!lib.has("downloads")) continue;
+            JSONObject downloads = lib.getJSONObject("downloads");
+
+            if (!downloads.has("artifact")) continue;
+
+            JSONObject artifact = downloads.getJSONObject("artifact");
+
+            String url = artifact.getString("url");
+            String path = artifact.getString("path");
+
+            currentSituationString = "Downloading Dependencies..";
+
+            Path out = Paths.get(MC_DIR, "libraries", path);
+            Files.createDirectories(out.getParent());
+
+            download(url, out);
+
+            System.out.println("Fabric Installed");
+
+            currentSituationString = "Downloading Dependencies...";
+        }
+
+//        JSONObject assetIndex = fabricJson.getJSONObject("assetIndex");
+//        String assetUrl = assetIndex.getString("url");
+//        String assetId = assetIndex.getString("id");
+//
+//        Path assetIndexPath = Paths.get(MC_DIR, "assets", "indexes", assetId + ".json");
+//        download(assetUrl, assetIndexPath);
+//
+//        JSONObject assetJson = new JSONObject(Files.readString(assetIndexPath));
+//
+//        JSONObject objects = assetJson.getJSONObject("objects");
+//
+//        ExecutorService pool = Executors.newFixedThreadPool(8);
+//
+//        currentSituationString = "Downloading Everything";
+//
+//        AtomicInteger done = new AtomicInteger(0);
+//        int total = objects.length();
+//
+//        AtomicLong bytesDownloaded = new AtomicLong(0);
+//        long startTime = System.currentTimeMillis();
+//
+//        currentSituationString = "";
+//        for (String key: objects.keySet()){
+//            JSONObject obj = objects.getJSONObject(key);
+//
+//            String hash = obj.getString("hash");
+//            String sub = hash.substring(0, 2);
+//
+//            String url = "https://resources.download.minecraft.net/" + sub + "/" + hash;
+//            Path out = Paths.get(MC_DIR, "assets", "objects", sub, hash);
+//
+//            pool.submit(() -> {
+//                try{
+//                    if (Files.exists(out)){
+//                        int current = done.incrementAndGet();
+//                        return;
+//                    }
+//
+//                    Files.createDirectories(out.getParent());
+//                    download(url, out, bytesDownloaded);
+//
+//                    int current = done.incrementAndGet();
+//
+//                    long now = System.currentTimeMillis();
+//                    double seconds = (now - startTime) / 1000.0;
+//
+//                    double speedMBps = (bytesDownloaded.get() / 1024.0 / 1024.0) / seconds;
+//
+//                    double filePerSecond = current / seconds;
+//                    long eta = (long) ((total - current) / filePerSecond);
+//
+//                    if (listener != null){
+//                        listener.onProgress(current, total, speedMBps, eta);
+//                    }
+//                } catch (Exception e){
+//                    System.out.println("Failed: " + url);
+//                }
+//            });
+//        }
+//
+////        System.out.println(done.get());
+//
+//        pool.shutdown();
+//        pool.awaitTermination(Long.MAX_VALUE, TimeUnit.SECONDS);
+//        System.out.println("Minecraft " + versionID + " Installed!");
+//
+//        MC_DIR = "minecraft";
 
         return outString;
     }
@@ -215,6 +364,6 @@ public class MinecraftInstaller {
 
     public static void main(String[] args) throws Exception {
         MinecraftInstaller mi = new MinecraftInstaller();
-        mi.install("1.20.2");
+        mi.installFabric("1.20.2", "0.14.22");
     }
 }
