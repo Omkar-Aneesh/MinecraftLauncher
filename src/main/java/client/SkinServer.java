@@ -32,9 +32,9 @@ public class SkinServer {
                 skinMap.put(key, object.getString(key));
             }
 
-            System.out.println("Loaded:" + skinMap.size());
+//            System.out.println("Loaded:" + skinMap.size());
         } catch (Exception e){
-            System.out.println("failed");
+//            System.out.println("failed");
             throw new RuntimeException(e);
         }
     }
@@ -53,7 +53,7 @@ public class SkinServer {
             server.setExecutor(java.util.concurrent.Executors.newCachedThreadPool());
             server.start();
 
-            System.out.println("started");
+//            System.out.println("started");
         } catch (Exception e){
             throw new RuntimeException(e);
         }
@@ -71,7 +71,7 @@ public class SkinServer {
             try (httpExchange) {
 
                 String path = httpExchange.getRequestURI().getPath();
-                System.out.println(httpExchange.getRequestURI());
+//                System.out.println(httpExchange.getRequestURI());
 
                 if (path.contains("/session/minecraft/profile/")) {
                     new ProfileHandler().handle(httpExchange);
@@ -115,7 +115,7 @@ public class SkinServer {
         @Override
         public void handle(HttpExchange httpExchange) throws IOException {
             try (httpExchange) {
-                System.out.println("RAW PATH: " + httpExchange.getRequestURI());
+//                System.out.println("RAW PATH: " + httpExchange.getRequestURI());
 
                 String path = httpExchange.getRequestURI().getPath();
 
@@ -127,7 +127,7 @@ public class SkinServer {
                 String[] parts = path.split("/");
                 String uuid = parts[parts.length - 1];
 
-                System.out.println("UUID request: " + uuid);
+//                System.out.println("UUID request: " + uuid);
 
                 if (!skinMap.containsKey(uuid)) {
                     new Thread(() -> {
@@ -162,7 +162,7 @@ public class SkinServer {
                         + "}"
                         + "}";
 
-                System.out.println("TEXTURE JSON: " + textureJson);
+//                System.out.println("TEXTURE JSON: " + textureJson);
 
                 String encoded = java.util.Base64.getEncoder().encodeToString(textureJson.getBytes(StandardCharsets.UTF_8));
 
@@ -175,8 +175,8 @@ public class SkinServer {
                         + "}]"
                         + "}";
 
-                System.out.println("Skin URL: " + skinUrl);
-                System.out.println("Encoded length: " + encoded.length());
+//                System.out.println("Skin URL: " + skinUrl);
+//                System.out.println("Encoded length: " + encoded.length());
 
                 httpExchange.getResponseHeaders().add("Content-Type", "application/json");
                 httpExchange.sendResponseHeaders(200, response.getBytes().length);
@@ -210,7 +210,7 @@ public class SkinServer {
 
                 skinMap.put(uuid, fileName);
 
-                System.out.println("updated");
+//                System.out.println("updated");
             } catch (Exception e){
                 throw new RuntimeException(e);
             }
@@ -232,7 +232,7 @@ public class SkinServer {
             JSONObject obj = new JSONObject(jsonStr);
             String skinUrl = obj.getString(uuid);
 
-            System.out.println("url:" + skinUrl);
+//            System.out.println("url:" + skinUrl);
 
             return skinUrl;
         }

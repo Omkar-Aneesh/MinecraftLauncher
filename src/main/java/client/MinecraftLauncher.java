@@ -213,6 +213,13 @@ public class MinecraftLauncher {
         username = name;
         version = v;
 
+        UUID uuid = UUID.nameUUIDFromBytes(name.getBytes());
+
+        if (!authenticator.authenticate(uuid.toString().replace("-", "")).contentEquals(username)){
+            System.out.println("auth");
+            return;
+        }
+
         currentSituationString = "Finding Version";
 
         Path versionDir = Paths.get(MC_DIR, "versions", version);
@@ -409,6 +416,13 @@ public class MinecraftLauncher {
     public static void launchFabric(String v, String name) throws Exception{
         username = name;
         version = v;
+
+        UUID uuid = UUID.nameUUIDFromBytes(name.getBytes());
+
+        if (!authenticator.authenticate(uuid.toString().replace("-", "")).contentEquals(username)){
+            System.out.println("auth");
+            return;
+        }
 
         currentSituationString = "Finding Version";
 

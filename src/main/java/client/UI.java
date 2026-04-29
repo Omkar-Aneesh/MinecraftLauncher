@@ -180,6 +180,14 @@ public class UI {
         drawFilePickerOption(x, y, width, height);
         drawUserNameBox(x, y, width, height);
         drawRegisterButton(x, y, width, height, 40 + 40 + 10);
+
+        gp.setColor(Color.RED);
+        String str = "Wait for about 15 minutes and restart the launcher to cleanly register your username.";
+        int strX = (1200/2) - (getStringWidth(str)/2);
+        int strY = 40;
+
+        gp.set_font(gp.getFont().deriveFont(30f));
+        gp.drawString(str, strX, strY);
     }
 
     public void drawFilePickerOption(int boxX, int boxY, int boxWidth, int boxHeight){
@@ -216,6 +224,7 @@ public class UI {
         }
 
         gp.set_font(gp.getFont().deriveFont(30f));
+        gp.setColor(Color.WHITE);
         gp.drawString(string, x, y + 30);
     }
 
@@ -241,7 +250,7 @@ public class UI {
             if (main.mouseEvents.isMouseCollidingWith(x, y, width, height)) {
 
                 authenticator.register(username, UUID.nameUUIDFromBytes(username.getBytes()).toString().replace("-", ""));
-                skinUploadHandler.uploadSkin(UUID.nameUUIDFromBytes(username.getBytes()).toString());
+                skinUploadHandler.uploadSkin(UUID.nameUUIDFromBytes(username.getBytes()).toString().replace("-", ""));
 
                 try {
                     FileWriter fileWriter = new FileWriter("minecraft/username");
@@ -250,9 +259,6 @@ public class UI {
                 } catch (Exception e){
                     throw new RuntimeException(e);
                 }
-
-                inNewInstallationMode = false;
-                progressBar = true;
 
                 Main.env.gamePanel.mouseH.pressed = false;
             }
@@ -834,7 +840,7 @@ public class UI {
                                         modLoaderVersionListFailed = true;
                                     }
                                 }
-                                if (modLoader.equals("Fabric")) {
+                                else if (modLoader.equals("Fabric")) {
                                     if (!version.isEmpty()) {
                                         try {
                                             fabricList.fetchLoaderVersions(version);
@@ -850,6 +856,11 @@ public class UI {
                                         drawPleaseSelectVersion = true;
                                         modLoaderVersionListFailed = true;
                                     }
+                                } else {
+                                    modLoaderVersionsForMCVersion.clear();
+                                    modLoaderVersion = "";
+                                    bestModLoaderVersion = "";
+                                    latestModLoaderVersion = "";
                                 }
                                 loadingModLoaderVersions = false;
                             }).start();
