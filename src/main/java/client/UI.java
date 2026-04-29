@@ -13,10 +13,9 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Comparator;
+import java.nio.file.StandardCopyOption;
+import java.util.*;
 import java.util.List;
-import java.util.Scanner;
 
 public class UI {
     GamePanel gp;
@@ -46,7 +45,7 @@ public class UI {
     boolean modLoaderNotSelected = false;
     boolean modLoaderVersionNotSelected = false;
 
-    String username = "Aneesh015";
+    String username = "";
     String installationName = "";
     String version = "";
     String modLoader = "";
@@ -105,6 +104,8 @@ public class UI {
     ForgeRunner forgeRunner = new ForgeRunner();
     FabricList fabricList = new FabricList();
     Authenticator authenticator = new Authenticator();
+    FilePicker filePicker = new FilePicker();
+    SkinUploadHandler skinUploadHandler = new SkinUploadHandler();
 
     ArrayList<String> versionList = new ArrayList<>();
 //    ArrayList<String> modLoaderList = new ArrayList<>();
@@ -142,8 +143,14 @@ public class UI {
 
     public void draw(){
 
-        drawVersionPlayList();
-        drawNewInstallationButton();
+        File file = new File("minecraft/username");
+
+        if (file.exists()) {
+            drawVersionPlayList();
+            drawNewInstallationButton();
+        } else {
+            drawSetupScreen();
+        }
 
         if (progressBar){
             drawProgressBar();
@@ -156,6 +163,102 @@ public class UI {
 //                String.format("%.2f MB/s", installSpeed) +
 //                " | ETA: " + installEta + "s");
     }
+
+    public void drawSetupScreen(){
+        drawSetupBox();
+    }
+
+    public void drawSetupBox(){
+        int width = 500;
+        int height = 200;
+        int x = (1200/2) - (width/2);
+        int y = (800/2) - (height/2);
+
+        gp.setColor(Color.GRAY);
+        gp.fillRect(x, y, width, height);
+
+        drawFilePickerOption(x, y, width, height);
+        drawUserNameBox(x, y, width, height);
+        drawRegisterButton(x, y, width, height, 40 + 40 + 10);
+    }
+
+    public void drawFilePickerOption(int boxX, int boxY, int boxWidth, int boxHeight){
+        int width = boxWidth - 10;
+        int height = 40;
+        int x = boxX + (boxWidth/2) - (width/2);
+        int y = boxY + 20 + 40;
+
+        gp.setColor(Color.GRAY);
+        gp.fillRect(x, y, width, height);
+        gp.setColor(Color.black);
+        gp.drawRect(x, y, width, height);
+
+        String string = "Choose Your Skin";
+
+        if (Main.env.gamePanel.mouseH.pressed) {
+            if (main.mouseEvents.isMouseCollidingWith(x, y, width, height)) {
+                String filePath = filePicker.choose();
+
+                if (Files.exists(Path.of(filePath))) {
+
+                    Path source = Paths.get(filePath);
+                    Path destination = Paths.get("minecraft", "toUpload", "skin.png");
+
+                    try {
+                        Files.copy(source, destination, StandardCopyOption.REPLACE_EXISTING);
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                } else {
+                    string = "Path Does Not Exist";
+                }
+            }
+        }
+
+        gp.set_font(gp.getFont().deriveFont(30f));
+        gp.drawString(string, x, y + 30);
+    }
+
+    public void drawRegisterButton(int boxX, int boxY, int boxWidth, int boxHeight, int lastBoxHeight){
+        int width = boxWidth - 30;
+        int height = 40;
+        int x = boxX + (boxWidth/2) - (width/2);
+        int y = boxY + lastBoxHeight + 40;
+
+        gp.setColor(Color.YELLOW);
+        gp.fillRect(x, y, width, height);
+
+        gp.set_font(gp.getFont().deriveFont(30f));
+        gp.setColor(Color.BLACK);
+
+        String string;
+
+        string = "Register";
+
+        gp.drawString(string, x + (width/2) - (getStringWidth(string)/2), y + 30);
+
+        if (Main.env.gamePanel.mouseH.pressed) {
+            if (main.mouseEvents.isMouseCollidingWith(x, y, width, height)) {
+
+                authenticator.register(username, UUID.nameUUIDFromBytes(username.getBytes()).toString().replace("-", ""));
+                skinUploadHandler.uploadSkin(UUID.nameUUIDFromBytes(username.getBytes()).toString());
+
+                try {
+                    FileWriter fileWriter = new FileWriter("minecraft/username");
+                    fileWriter.write(username);
+                    fileWriter.close();
+                } catch (Exception e){
+                    throw new RuntimeException(e);
+                }
+
+                inNewInstallationMode = false;
+                progressBar = true;
+
+                Main.env.gamePanel.mouseH.pressed = false;
+            }
+        }
+    }
+
 
     public void loadVersionPlayList(){
         File file = new File("minecraft/launcher_profiles.json");
@@ -1251,6 +1354,17 @@ public class UI {
                 new Thread(() -> {
                     try {
                         gp.mouseH.pressed = false;
+
+                        File file = new File("minecraft/username");
+
+                        if (file.exists()) {
+                            Scanner scanner = new Scanner(file);
+                            username = scanner.nextLine();
+                            scanner.close();
+                        } else {
+                            throw new RuntimeException("Username not found");
+                        }
+
                         minecraftLauncher.run(version, username);
                         progressBar = false;
                     } catch (Exception e){
