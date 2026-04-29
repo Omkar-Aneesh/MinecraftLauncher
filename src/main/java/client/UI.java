@@ -104,6 +104,7 @@ public class UI {
     ForgeInstaller forgeInstaller = new ForgeInstaller();
     ForgeRunner forgeRunner = new ForgeRunner();
     FabricList fabricList = new FabricList();
+    Authenticator authenticator = new Authenticator();
 
     ArrayList<String> versionList = new ArrayList<>();
 //    ArrayList<String> modLoaderList = new ArrayList<>();
@@ -140,6 +141,7 @@ public class UI {
     }
 
     public void draw(){
+
         drawVersionPlayList();
         drawNewInstallationButton();
 

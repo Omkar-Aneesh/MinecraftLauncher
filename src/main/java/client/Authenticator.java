@@ -84,4 +84,45 @@ public class Authenticator {
             throw new RuntimeException(e);
         }
     }
+
+    public void register(String username, String uuid){
+        try {
+            getSecret();
+        } catch (Exception e){
+            throw new RuntimeException(e);
+        }
+
+        String jsonStr = fetchJson("https://raw.githubusercontent.com/Omkar-Aneesh/authenticationSystem/main/manifest.json");
+
+        JSONObject obj = new JSONObject(jsonStr);
+
+        if (!obj.has(uuid)){
+            obj.put(uuid, username);
+
+            String sha = getFileSha();
+            pushManifest(obj, sha);
+        } else {
+            throw new RuntimeException("UUID already exists");
+        }
+    }
+
+    public String authenticate(String uuid){
+        String username = "";
+
+        String jsonStr = fetchJson("https://raw.githubusercontent.com/Omkar-Aneesh/authenticationSystem/main/manifest.json");
+        JSONObject object = new JSONObject(jsonStr);
+
+        if (object.has(uuid)){
+            username = object.getString(uuid);
+        } else {
+            throw new RuntimeException("UUID does not exist");
+        }
+
+        return username;
+    }
+
+    static void main(String[] args) {
+        Authenticator authenticator = new Authenticator();
+        System.out.println(authenticator.authenticate("9ce9153d9c0c30b9b671bd65171c53de"));
+    }
 }

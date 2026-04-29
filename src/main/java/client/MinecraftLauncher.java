@@ -29,6 +29,7 @@ public class MinecraftLauncher {
     public static String currentSituationString = "";
 
     SkinServer skinServer = new SkinServer();
+    static Authenticator authenticator = new Authenticator();
 
     static void main(String[] args) {
         MinecraftLauncher minecraftLauncher = new MinecraftLauncher();
@@ -36,10 +37,11 @@ public class MinecraftLauncher {
     }
 
     public void run(String version, String username) {
-
         MC_DIR = "minecraft/" + version;
         try {
-//            skinServer.launch();
+            new Thread(() -> {
+                skinServer.launch();
+            }).start();
             if (version.contains("forge")) {
                 launchForge(version, username);
             } else if(version.contains("fabric")){
@@ -87,6 +89,13 @@ public class MinecraftLauncher {
         }
 
         uuid = UUID.nameUUIDFromBytes(username.getBytes());
+
+        System.out.println(uuid);
+
+        if (!authenticator.authenticate(uuid.toString().replace("-", "")).contentEquals(username)){
+            System.out.println("auth");
+            return;
+        }
 
         nativesDir = Paths.get(MC_DIR, "versions", version, "natives");
         Files.createDirectories(nativesDir);

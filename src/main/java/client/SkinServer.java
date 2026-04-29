@@ -19,6 +19,8 @@ import java.nio.file.StandardCopyOption;
 public class SkinServer {
     static java.util.Map<String, String> skinMap = new java.util.HashMap<>();
 
+    static Authenticator authenticator = new Authenticator();
+
     static void loadSkinMap() {
         try {
             Path path = Path.of("minecraft", "skins", "map.json");
@@ -146,10 +148,12 @@ public class SkinServer {
                 String fileName = skinMap.getOrDefault(uuid, "steve.png");
                 String skinUrl = "http://localhost:8080/skins/" + fileName;
 
+                String username = authenticator.authenticate(uuid);
+
                 String textureJson = "{"
                         + "\"timestamp\":" + System.currentTimeMillis() + ","
                         + "\"profileId\":\"" + uuid + "\","
-                        + "\"profileName\":\"Aneesh015\","
+                        + "\"profileName\":\"" + username + "\","
                         + "\"signatureRequired\":false,"
                         + "\"textures\":{"
                         + "\"SKIN\":{"
@@ -164,7 +168,7 @@ public class SkinServer {
 
                 String response = "{"
                         + "\"id\":\"" + uuid + "\","
-                        + "\"name\":\"Aneesh015\","
+                        + "\"name\":\"" + username + "\","
                         + "\"properties\":[{"
                         + "\"name\":\"textures\","
                         + "\"value\":\"" + encoded + "\""
