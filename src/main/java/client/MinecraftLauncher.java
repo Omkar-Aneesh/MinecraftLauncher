@@ -106,6 +106,9 @@ public class MinecraftLauncher {
 
         classpath = buildClasspath(versionJson, version);
 
+        Path argFile = Files.createTempFile("mc-launch-args", ".txt");
+        Files.writeString(argFile, "-cp " + classpath);
+
         String mainClass = versionJson.getString("mainClass");
 //        String mainClass = "cpw.mods.bootstraplauncher.BootstrapLauncher";
 
@@ -147,8 +150,7 @@ public class MinecraftLauncher {
         command.add("-Dminecraft.api.session.host=http://127.0.0.1:8080");
         command.add("-Dminecraft.api.services.host=http://127.0.0.1:8080");
 
-        command.add("-cp");
-        command.add(classpath);
+        command.add("@" + argFile.toAbsolutePath().toString());
 
         command.add(mainClass);
 
@@ -213,7 +215,7 @@ public class MinecraftLauncher {
         username = name;
         version = v;
 
-        UUID uuid = UUID.nameUUIDFromBytes(name.getBytes());
+        uuid = UUID.nameUUIDFromBytes(name.getBytes());
 
         if (!authenticator.authenticate(uuid.toString().replace("-", "")).contentEquals(username)){
             System.out.println("auth");
@@ -323,6 +325,9 @@ public class MinecraftLauncher {
 
         classpath = buildClasspath(merged, version);
 
+        Path argFile = Files.createTempFile("mc-launch-args", ".txt");
+        Files.writeString(argFile, "-cp " + classpath);
+
         String mainClass = merged.getString("mainClass");
 //        String mainClass = "cpw.mods.bootstraplauncher.BootstrapLauncher";
 
@@ -348,12 +353,25 @@ public class MinecraftLauncher {
 
 //        command.add("-Xms2G");
 
+        command.add("-javaagent:minecraft/authlib-injector.jar=http://localhost:8080");
+
+        command.add("-Dauthlibinjector.debug");
+//        command.add("-Dauthlibinjector.mojangNamespace=false");
+//        command.add("-Dauthlibinjector.disableSignatureCheck=true");
+
+        command.add("-Dskinserver.url=http://127.0.0.1:8080");
+        command.add("-Dresources.url=http://127.0.0.1:8080");
+
         command.add("-Djava.library.path=" + nativesDir.toAbsolutePath());
 
-        command.add("-Dminecraft.api.session.host=http://localhost:8080");
+        command.add("-Dminecraft.api.auth.host=http://127.0.0.1:8080");
+        command.add("-Dminecraft.api.account.host=http://127.0.0.1:8080");
+        command.add("-Dminecraft.api.session.host=http://127.0.0.1:8080");
+        command.add("-Dminecraft.api.services.host=http://127.0.0.1:8080");
 
-        command.add("-cp");
-        command.add(classpath);
+//        command.add("-cp");
+//        command.add(classpath);
+        command.add("@" + argFile.toAbsolutePath().toString());
 
         command.add(mainClass);
 
@@ -417,7 +435,7 @@ public class MinecraftLauncher {
         username = name;
         version = v;
 
-        UUID uuid = UUID.nameUUIDFromBytes(name.getBytes());
+        uuid = UUID.nameUUIDFromBytes(name.getBytes());
 
         if (!authenticator.authenticate(uuid.toString().replace("-", "")).contentEquals(username)){
             System.out.println("auth");
@@ -532,6 +550,8 @@ public class MinecraftLauncher {
         currentSituationString = "Building Classpath";
 
         classpath = buildClasspath(merged, version);
+        Path argFile = Files.createTempFile("mc-launch-args", ".txt");
+        Files.writeString(argFile, "-cp " + classpath);
 
         String mainClass = merged.getString("mainClass");
 //        String mainClass = "cpw.mods.bootstraplauncher.BootstrapLauncher";
@@ -558,12 +578,25 @@ public class MinecraftLauncher {
 
 //        command.add("-Xms2G");
 
+        command.add("-javaagent:minecraft/authlib-injector.jar=http://localhost:8080");
+
+        command.add("-Dauthlibinjector.debug");
+//        command.add("-Dauthlibinjector.mojangNamespace=false");
+//        command.add("-Dauthlibinjector.disableSignatureCheck=true");
+
+        command.add("-Dskinserver.url=http://127.0.0.1:8080");
+        command.add("-Dresources.url=http://127.0.0.1:8080");
+
         command.add("-Djava.library.path=" + nativesDir.toAbsolutePath());
 
-        command.add("-Dminecraft.api.session.host=http://localhost:8080");
+        command.add("-Dminecraft.api.auth.host=http://127.0.0.1:8080");
+        command.add("-Dminecraft.api.account.host=http://127.0.0.1:8080");
+        command.add("-Dminecraft.api.session.host=http://127.0.0.1:8080");
+        command.add("-Dminecraft.api.services.host=http://127.0.0.1:8080");
 
-        command.add("-cp");
-        command.add(classpath);
+//        command.add("-cp");
+//        command.add(classpath);
+        command.add("@" + argFile.toAbsolutePath().toString());
 
         command.add(mainClass);
 
