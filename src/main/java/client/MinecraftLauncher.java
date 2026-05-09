@@ -26,6 +26,8 @@ public class MinecraftLauncher {
     static Path nativesDir;
     static String classpath;
 
+    boolean skinServerAlive = false;
+
     public static String currentSituationString = "";
 
     SkinServer skinServer = new SkinServer();
@@ -39,9 +41,13 @@ public class MinecraftLauncher {
     public void run(String version, String username) {
         MC_DIR = "minecraft/" + version;
         try {
-            new Thread(() -> {
-                skinServer.launch();
-            }).start();
+            if (!skinServerAlive) {
+                new Thread(() -> {
+                    skinServer.launch();
+                    skinServerAlive = true;
+                }).start();
+            }
+
             if (version.contains("forge")) {
                 launchForge(version, username);
             } else if(version.contains("fabric")){

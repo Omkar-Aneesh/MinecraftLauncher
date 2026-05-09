@@ -44,6 +44,7 @@ public class UI {
     boolean versionNotSelected = false;
     boolean modLoaderNotSelected = false;
     boolean modLoaderVersionNotSelected = false;
+    boolean offlineMode = false;
 
     String username = "";
     String installationName = "";
@@ -148,6 +149,7 @@ public class UI {
         if (file.exists()) {
             drawVersionPlayList();
             drawNewInstallationButton();
+            drawOfflineModeButton();
         } else {
             drawSetupScreen();
         }
@@ -449,6 +451,40 @@ public class UI {
             drawNewInstallationWindow();
         }
     }
+
+    public void drawOfflineModeButton(){
+        int x = 230;
+        int y = 20;
+        int width = 200;
+        int height = 30;
+
+        gp.setColor(Color.GRAY);
+        gp.fillRect(x, y, width, height);
+
+        gp.setColor(Color.WHITE);
+        gp.set_font(gp.getFont().deriveFont(20f));
+
+        String text;
+
+        text = "Offline Mode: false";
+
+        if (offlineMode){
+            text = "Offline Mode: true";
+        }
+
+        int strX = x + (width / 2) - (getStringWidth(text) / 2);
+
+        gp.drawString(text, strX, y + 20);
+
+        if (gp.mouseH.pressed){
+            if (main.mouseEvents.isMouseCollidingWith(x, y, width, height)){
+                offlineMode = !offlineMode;
+                Memory.offlineMode = offlineMode;
+                gp.mouseH.pressed = false;
+            }
+        }
+    }
+
     public int drawInstallationNameBox(int boxX, int boxY, int boxWidth, int boxHeight){
         int width = boxWidth - 10;
         int height = 40;
