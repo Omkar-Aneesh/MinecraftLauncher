@@ -6,6 +6,7 @@ import com.sun.net.httpserver.HttpServer;
 import org.json.JSONObject;
 
 import javax.print.attribute.standard.MediaSize;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -18,6 +19,7 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Scanner;
 
 public class SkinServer {
     static java.util.Map<String, String> skinMap = new java.util.HashMap<>();
@@ -94,7 +96,19 @@ public class SkinServer {
         String fileName = skinMap.getOrDefault(uuid, "steve.png");
         String skinUrl = "http://localhost:8080/skins/" + fileName;
 
-        String username = authenticator.authenticate(uuid);
+        String username;
+
+        if (!Memory.offlineMode) {
+            username = authenticator.authenticate(uuid);
+        } else {
+            try {
+                File file = new File("minecraft/username");
+                Scanner scanner = new Scanner(file);
+                username = scanner.nextLine();
+            } catch (Exception e){
+                throw new RuntimeException(e);
+            }
+        }
 
         String textureJson = "{"
                 + "\"timestamp\":" + System.currentTimeMillis() + ","

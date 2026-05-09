@@ -98,9 +98,11 @@ public class MinecraftLauncher {
 
         System.out.println(uuid);
 
-        if (!authenticator.authenticate(uuid.toString().replace("-", "")).contentEquals(username)){
-            System.out.println("auth");
-            return;
+        if (!Memory.offlineMode) {
+            if (!authenticator.authenticate(uuid.toString().replace("-", "")).contentEquals(username)) {
+                System.out.println("auth");
+                return;
+            }
         }
 
         nativesDir = Paths.get(MC_DIR, "versions", version, "natives");
@@ -223,9 +225,11 @@ public class MinecraftLauncher {
 
         uuid = UUID.nameUUIDFromBytes(name.getBytes());
 
-        if (!authenticator.authenticate(uuid.toString().replace("-", "")).contentEquals(username)){
-            System.out.println("auth");
-            return;
+        if (!Memory.offlineMode) {
+            if (!authenticator.authenticate(uuid.toString().replace("-", "")).contentEquals(username)) {
+                System.out.println("auth");
+                return;
+            }
         }
 
         currentSituationString = "Finding Version";
@@ -443,9 +447,11 @@ public class MinecraftLauncher {
 
         uuid = UUID.nameUUIDFromBytes(name.getBytes());
 
-        if (!authenticator.authenticate(uuid.toString().replace("-", "")).contentEquals(username)){
-            System.out.println("auth");
-            return;
+        if (!Memory.offlineMode) {
+            if (!authenticator.authenticate(uuid.toString().replace("-", "")).contentEquals(username)) {
+                System.out.println("auth");
+                return;
+            }
         }
 
         currentSituationString = "Finding Version";
