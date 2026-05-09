@@ -128,6 +128,10 @@ public class UI {
         loadVersionPlayList();
 
         optionImage = loadImage("3dots");
+
+        Memory.loadAll();
+
+        offlineMode = Memory.offlineMode;
     }
 
     public BufferedImage loadImage(String imagePath){
@@ -480,6 +484,9 @@ public class UI {
             if (main.mouseEvents.isMouseCollidingWith(x, y, width, height)){
                 offlineMode = !offlineMode;
                 Memory.offlineMode = offlineMode;
+                new Thread(() -> {
+                    Memory.saveAll();
+                }).start();
                 gp.mouseH.pressed = false;
             }
         }
