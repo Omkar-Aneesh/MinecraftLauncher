@@ -45,6 +45,8 @@ public class UI {
     boolean modLoaderNotSelected = false;
     boolean modLoaderVersionNotSelected = false;
     boolean offlineMode = false;
+    boolean draggingScrollBar = false;
+    boolean scrolling = false;
 
     String username = "";
     String installationName = "";
@@ -82,7 +84,7 @@ public class UI {
     int modLoaderSelectionPanelHeight = 121;
 
     int modLoaderVersionSelectionPanelWidth = 491;
-    int modLoaderVersionSelectionPanelHeight = 401;
+    int modLoaderVersionSelectionPanelHeight = 321;
 
     int optionsPanelWidth = 100;
     int optionPanelHeight = 40;
@@ -414,7 +416,7 @@ public class UI {
 
         if (gp.mouseH.pressed){
             if (!main.mouseEvents.isMouseCollidingWith(x, y, width, height) && !enteringInstallationName &&
-                !inVersionSelectionMode && !inModLoaderSelectionMode && !inModLoaderVersionSelectionMode){
+                !inVersionSelectionMode && !inModLoaderSelectionMode && !inModLoaderVersionSelectionMode && !draggingScrollBar){
                 inNewInstallationMode = false;
 
 //                username = "";
@@ -658,6 +660,63 @@ public class UI {
             }
         }
     }
+
+    public void drawScrollWheel(int x, int y, int width, int height, int total, int x2, int y2, Graphics2D g2, int index){
+        g2.setColor(Color.gray);
+        g2.fillRect(x, y, width, height);
+        g2.setColor(Color.BLACK);
+        g2.drawRect(x, y, width, height);
+
+        int thumbHeight = (int) (((double) height / total) * height);
+        thumbHeight = Math.max(thumbHeight, 30);
+
+        int maxScrollOffset = total - height;
+        int scrollableTrackArea = height - thumbHeight;
+
+        int thumbY = 0;
+
+        if (maxScrollOffset > 0){
+            if (index == 0) {
+                thumbY = (int) ((double) -versionOffset / maxScrollOffset * scrollableTrackArea);
+            } else if (index == 1){
+                thumbY = (int) ((double) -modLoaderVersionOffset / maxScrollOffset * scrollableTrackArea);
+            }
+        }
+
+        if (gp.mouseH.pressed){
+            if (main.mouseEvents.isMouseCollidingWith(x + x2, y + y2, width, height)){
+                draggingScrollBar = true;
+            }
+        } else {
+            draggingScrollBar = false;
+        }
+
+        if (draggingScrollBar && gp.mouseH.pressed){
+            double relativeMouseY = (gp.mouseH.moveY - (y + y2)) - (thumbHeight / 2.0);
+            double scrollPercentage = relativeMouseY / (double) scrollableTrackArea;
+
+            if (index == 0) {
+                versionOffset = (int) -(scrollPercentage * maxScrollOffset);
+
+                if (versionOffset > 0) versionOffset = 0;
+                if (versionOffset < -maxScrollOffset) versionOffset = -maxScrollOffset;
+            } else if (index == 1){
+                modLoaderVersionOffset = (int) -(scrollPercentage * maxScrollOffset);
+
+                if (modLoaderVersionOffset > 0) modLoaderVersionOffset = 0;
+                if (modLoaderVersionOffset < -maxScrollOffset) modLoaderVersionOffset = -maxScrollOffset;
+            }
+        }
+
+        g2.setColor(Color.WHITE);
+        g2.fillRect(x + 2, thumbY, width - 4, thumbHeight);
+        g2.setColor(Color.BLACK);
+        g2.drawRect(x + 2, thumbY, width - 4, thumbHeight);
+
+        gp.setColor(Color.GREEN);
+        gp.drawRect(x + x2, y + y2, width, height);
+    }
+
     public int drawVersionSelector(int boxX, int boxY, int boxWidth, int boxHeight, int lastBoxHeight){
         int width = boxWidth - 10;
         int height = 40;
@@ -688,12 +747,12 @@ public class UI {
         gp.drawString(string, x, y + 30);
 
         if (Main.env.gamePanel.mouseH.pressed) {
-            if (main.mouseEvents.isMouseCollidingWith(x, y, width, height)) {
+            if (main.mouseEvents.isMouseCollidingWith(x, y, width, height) &&!draggingScrollBar) {
                 g2.setColor(Color.BLACK);
                 g2.fillRect(0, 0, versionSelectionPanelWidth, versionSelectionPanelHeight);
                 inVersionSelectionMode = !inVersionSelectionMode;
                 Main.env.gamePanel.mouseH.pressed = false;
-            } else if(!main.mouseEvents.isMouseCollidingWith(x, y + height, versionSelectionPanelWidth, versionSelectionPanelHeight)) {
+            } else if(!main.mouseEvents.isMouseCollidingWith(x, y + height, versionSelectionPanelWidth, versionSelectionPanelHeight) && !draggingScrollBar) {
                 inVersionSelectionMode = false;
             }
         }
@@ -721,7 +780,7 @@ public class UI {
                 g2.drawString(versionList.get(i), 0, BoxY + 30);
 
                 if (Main.env.gamePanel.mouseH.pressed) {
-                    if (Main.env.gamePanel.mouseH.moveY > y + height && Main.env.gamePanel.mouseH.moveY < y + height + versionSelectionPanelHeight) {
+                    if (Main.env.gamePanel.mouseH.moveY > y + height && Main.env.gamePanel.mouseH.moveY < y + height + versionSelectionPanelHeight && Main.env.gamePanel.mouseH.moveX < x + versionSelectionPanelWidth - 20) {
                         if (main.mouseEvents.isMouseCollidingWith(x, BoxY + y + height, width, height)) {
                             version = versionList.get(i);
                             File file = new File("minecraft/versions");
@@ -742,6 +801,9 @@ public class UI {
 
                             }
 
+                            try {
+                                modLoaderVersionsForMCVersion = null;
+                            } catch (Exception _){}
                             new Thread(() -> {
                                 loadingModLoaderVersions = true;
                                 if (modLoader.equals("Forge")) {
@@ -781,6 +843,8 @@ public class UI {
 
                 BoxY += height;
             }
+
+            drawScrollWheel(width - 20, 0, 20, versionSelectionPanelHeight, versionList.size() * height, x, y + height, g2, 0);
 
             gp.drawImage(screen2, x, y + height);
         }
@@ -864,6 +928,9 @@ public class UI {
 //                                }
 //                            }
 
+                            try {
+                                modLoaderVersionsForMCVersion = null;
+                            } catch (Exception _){}
                             new Thread(() -> {
                                 loadingModLoaderVersions = true;
                                 if (modLoader.equals("Forge")) {
@@ -977,13 +1044,15 @@ public class UI {
         }
         gp.drawString(string, x, y + 30);
 
+        System.out.println(modLoaderVersionsForMCVersion);
+
         if (Main.env.gamePanel.mouseH.pressed) {
-            if (main.mouseEvents.isMouseCollidingWith(x, y, width, height) && !inVersionSelectionMode && !inModLoaderSelectionMode && modLoaderVersionsForMCVersion != null) {
+            if (main.mouseEvents.isMouseCollidingWith(x, y, width, height) && !inVersionSelectionMode && !inModLoaderSelectionMode && modLoaderVersionsForMCVersion != null && !draggingScrollBar) {
                 g4.setColor(Color.BLACK);
                 g4.fillRect(0, 0, modLoaderVersionSelectionPanelHeight, modLoaderVersionSelectionPanelHeight);
                 inModLoaderVersionSelectionMode = !inModLoaderVersionSelectionMode;
                 Main.env.gamePanel.mouseH.pressed = false;
-            } else if (!main.mouseEvents.isMouseCollidingWith(x, y + height, modLoaderVersionSelectionPanelWidth, modLoaderVersionSelectionPanelHeight)){
+            } else if (!main.mouseEvents.isMouseCollidingWith(x, y + height, modLoaderVersionSelectionPanelWidth, modLoaderVersionSelectionPanelHeight) && !draggingScrollBar){
                 inModLoaderVersionSelectionMode = false;
             }
         }
@@ -1032,7 +1101,7 @@ public class UI {
                 g4.drawString(modLoaderVersionsForMCVersion.get(i) + " " + extra, 0, BoxY + 30);
 
                 if (Main.env.gamePanel.mouseH.pressed) {
-                    if (Main.env.gamePanel.mouseH.moveY > y + height && Main.env.gamePanel.mouseH.moveY < y + height + versionSelectionPanelHeight) {
+                    if (Main.env.gamePanel.mouseH.moveY > y + height && Main.env.gamePanel.mouseH.moveY < y + height + versionSelectionPanelHeight && Main.env.gamePanel.mouseH.moveX < x + modLoaderVersionSelectionPanelWidth - 20) {
                         if (main.mouseEvents.isMouseCollidingWith(x, BoxY + y + height, width, height)) {
                             modLoaderVersion = modLoaderVersionsForMCVersion.get(i);
 //                            File file = new File("minecraft/versions");
@@ -1055,6 +1124,9 @@ public class UI {
 
                 BoxY += height;
             }
+
+            drawScrollWheel(width - 20, 0, 20, modLoaderVersionSelectionPanelHeight, modLoaderVersionsForMCVersion.size() * height, x, y + height, g4, 1);
+
 
             gp.drawImage(screen4, x, y + height);
         }

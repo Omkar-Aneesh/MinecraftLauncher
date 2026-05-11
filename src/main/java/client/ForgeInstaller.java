@@ -326,6 +326,9 @@ public class ForgeInstaller {
     }
 
     public void getAllVersionList(){
+        try {
+            forgeMap.clear();
+        } catch (Exception _){}
 
         try {
             URL url = new URL("https://maven.minecraftforge.net/net/minecraftforge/forge/maven-metadata.xml");

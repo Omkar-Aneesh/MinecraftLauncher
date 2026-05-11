@@ -2,6 +2,8 @@ package client;
 
 import java.io.File;
 import java.io.FileWriter;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Scanner;
 
 public class Memory {
@@ -10,6 +12,11 @@ public class Memory {
     public static void loadAll(){
         try {
             File file = new File("mem");
+
+            if (!file.exists()){
+                Files.createFile(Path.of("mem"));
+            }
+
             Scanner scanner = new Scanner(file);
 
             while (scanner.hasNextLine()) {
@@ -21,6 +28,7 @@ public class Memory {
                     offlineMode = Boolean.parseBoolean(values[1]);
                 }
             }
+            scanner.close();
         } catch (Exception e){
             throw new RuntimeException(e);
         }
@@ -36,6 +44,7 @@ public class Memory {
             String string = createString(object, value);
 
             fileWriter.write(string);
+            fileWriter.close();
         } catch (Exception e){
             throw new RuntimeException(e);
         }
