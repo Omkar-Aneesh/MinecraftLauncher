@@ -14,6 +14,7 @@ public class SetupEnv{
     public boolean undecorated = false;
     public GamePanel gamePanel = new GamePanel();
     String title = "SJDK";
+    public boolean visible = true;
 
     public void setupEnv(Main main){
         gamePanel.start(main);
@@ -28,7 +29,7 @@ public class SetupEnv{
         window.pack();
 
         window.setLocationRelativeTo(locationComponent);
-        window.setVisible(true);
+        window.setVisible(visible);
 
         gamePanel.setupGame();
         gamePanel.startGameThread();

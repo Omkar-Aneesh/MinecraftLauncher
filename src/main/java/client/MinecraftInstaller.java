@@ -149,7 +149,7 @@ public class MinecraftInstaller {
                         listener.onProgress(current, total, speedMBps, eta);
                     }
                 } catch (Exception e){
-                    System.out.println("Failed: " + url);
+//                    System.out.println("Failed: " + url);
                 }
             });
         }
@@ -236,7 +236,7 @@ public class MinecraftInstaller {
 
             download(url, out);
 
-            System.out.println("Fabric Installed");
+//            System.out.println("Fabric Installed");
 
             currentSituationString = "Downloading Dependencies...";
         }

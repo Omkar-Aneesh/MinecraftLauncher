@@ -2,9 +2,11 @@ package client;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
+import sjdk.com.aneesh.sjdk.main.SetupEnv;
 
 import javax.print.attribute.HashAttributeSet;
 import javax.swing.*;
+import java.awt.*;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -12,6 +14,7 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -49,11 +52,48 @@ public class MinecraftLauncher {
             }
 
             if (version.contains("forge")) {
-                launchForge(version, username);
+                Timer timer = new Timer(3000, e -> {
+                    SetupEnv.window.setVisible(false);
+                });
+
+                timer.setRepeats(false);
+                timer.start();
+                new Thread(() -> {
+                    try {
+                        launchForge(version, username);
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                }).start();
             } else if(version.contains("fabric")){
-                launchFabric(version, username);
+                Timer timer = new Timer(8000, e -> {
+                    SetupEnv.window.setVisible(false);
+                });
+
+                timer.setRepeats(false);
+                timer.start();
+
+                new Thread(() -> {
+                    try {
+                        launchFabric(version, username);
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                }).start();
             } else {
-                launch(version, username);
+                Timer timer = new Timer(5000, e -> {
+                    SetupEnv.window.setVisible(false);
+                });
+
+                timer.setRepeats(false);
+                timer.start();
+                new Thread(() -> {
+                    try {
+                        launch(version, username);
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                }).start();
             }
         } catch (Exception e){
             throw new RuntimeException(e);
@@ -96,11 +136,11 @@ public class MinecraftLauncher {
 
         uuid = UUID.nameUUIDFromBytes(username.getBytes());
 
-        System.out.println(uuid);
+//        System.out.println(uuid);
 
         if (!Memory.offlineMode) {
             if (!authenticator.authenticate(uuid.toString().replace("-", "")).contentEquals(username)) {
-                System.out.println("auth");
+//                System.out.println("auth");
                 return;
             }
         }
@@ -178,7 +218,7 @@ public class MinecraftLauncher {
         command.add("--uuid");
         command.add(uuid.toString());
 
-        System.out.println(uuid.toString());
+//        System.out.println(uuid.toString());
 
         command.add("--accessToken");
         command.add("0");
@@ -215,7 +255,14 @@ public class MinecraftLauncher {
 
         ProcessBuilder pb = new ProcessBuilder(command);
         pb.inheritIO();
-        pb.start();
+        Process process = pb.start();
+
+        int exitCode = process.waitFor();
+
+        EventQueue.invokeLater(() -> {
+            SetupEnv.window.setVisible(true);
+            SetupEnv.window.toFront();
+        });
 
     }
 
@@ -227,7 +274,7 @@ public class MinecraftLauncher {
 
         if (!Memory.offlineMode) {
             if (!authenticator.authenticate(uuid.toString().replace("-", "")).contentEquals(username)) {
-                System.out.println("auth");
+//                System.out.println("auth");
                 return;
             }
         }
@@ -436,7 +483,14 @@ public class MinecraftLauncher {
 
         ProcessBuilder pb = new ProcessBuilder(command);
         pb.inheritIO();
-        pb.start();
+        Process process = pb.start();
+
+        int exitCode = process.waitFor();
+
+        EventQueue.invokeLater(() -> {
+            SetupEnv.window.setVisible(true);
+            SetupEnv.window.toFront();
+        });
 
 //        MC_DIR = "minecraft";
 
@@ -449,7 +503,7 @@ public class MinecraftLauncher {
 
         if (!Memory.offlineMode) {
             if (!authenticator.authenticate(uuid.toString().replace("-", "")).contentEquals(username)) {
-                System.out.println("auth");
+//                System.out.println("auth");
                 return;
             }
         }
@@ -663,7 +717,14 @@ public class MinecraftLauncher {
 
         ProcessBuilder pb = new ProcessBuilder(command);
         pb.inheritIO();
-        pb.start();
+        Process process = pb.start();
+
+        int exitCode = process.waitFor();
+
+        EventQueue.invokeLater(() -> {
+            SetupEnv.window.setVisible(true);
+            SetupEnv.window.toFront();
+        });
 
 //        MC_DIR = "minecraft";
 

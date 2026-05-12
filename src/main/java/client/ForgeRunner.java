@@ -30,7 +30,7 @@ public class ForgeRunner {
             boolean deleted = installer.delete();
 
             if (deleted){
-                System.out.println("Deleted");
+//                System.out.println("Deleted");
             }
         }
     }
@@ -65,7 +65,7 @@ public class ForgeRunner {
         createLauncherProfile(MC_DIR);
         runJar();
 
-        System.out.println("✅ Forge setup complete");
+//        System.out.println("✅ Forge setup complete");
     }
 
     public void extractVersionJson(String installerPath, String outputPath){
@@ -87,7 +87,7 @@ public class ForgeRunner {
             is.close();
             jar.close();
 
-            System.out.println("Version Extraction Complete");
+//            System.out.println("Version Extraction Complete");
 
         } catch (Exception e){
             throw new RuntimeException(e);
@@ -113,7 +113,7 @@ public class ForgeRunner {
 
             Files.writeString(Path.of(output), obj.toString(4));
 
-            System.out.println("version.json Modification Complete");
+//            System.out.println("version.json Modification Complete");
         } catch (Exception e){
             throw new RuntimeException(e);
         }
@@ -223,7 +223,7 @@ public class ForgeRunner {
 
             String line;
             while ((line = reader.readLine()) != null) {
-                System.out.println("[Forge] " + line);
+//                System.out.println("[Forge] " + line);
                 if (line.contains("Copying")){
                     currentSituationString = "Copying Data";
                 }

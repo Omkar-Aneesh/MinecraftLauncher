@@ -1044,7 +1044,7 @@ public class UI {
         }
         gp.drawString(string, x, y + 30);
 
-        System.out.println(modLoaderVersionsForMCVersion);
+//        System.out.println(modLoaderVersionsForMCVersion);
 
         if (Main.env.gamePanel.mouseH.pressed) {
             if (main.mouseEvents.isMouseCollidingWith(x, y, width, height) && !inVersionSelectionMode && !inModLoaderSelectionMode && modLoaderVersionsForMCVersion != null && !draggingScrollBar) {
@@ -1296,7 +1296,7 @@ public class UI {
                                 JSONObject profile = new JSONObject();
 
                                 profile.put("name", installationName);
-                                profile.put("lastVersionId", "fabric-loader" + modLoaderVersion + "-" + version);
+                                profile.put("lastVersionId", "fabric-loader-" + modLoaderVersion + "-" + version);
                                 profile.put("type", "custom");
 
                                 profiles.put(installationName, profile);
@@ -1516,7 +1516,7 @@ public class UI {
                 list.add(v.getString("id"));
             }
         } catch (Exception e){
-            System.out.println(e);
+            throw new RuntimeException(e);
         }
 
         return list;

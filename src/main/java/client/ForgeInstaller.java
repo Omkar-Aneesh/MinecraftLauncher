@@ -209,7 +209,7 @@ public class ForgeInstaller {
                             listener.onProgress(current, total, speedMBps, eta);
                         }
                     } catch (Exception e){
-                        System.out.println("Failed: " + url);
+//                        System.out.println("Failed: " + url);
                     }
                 });
             }

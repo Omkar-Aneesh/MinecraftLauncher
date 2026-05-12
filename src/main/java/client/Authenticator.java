@@ -73,13 +73,13 @@ public class Authenticator {
             os.close();
 
             int responseCode = conn.getResponseCode();
-            System.out.println("Manifest update response: " + responseCode);
+//            System.out.println("Manifest update response: " + responseCode);
 
             InputStream is = (responseCode >= 200 && responseCode < 300)
                     ? conn.getInputStream()
                     : conn.getErrorStream();
 
-            System.out.println(new String(is.readAllBytes()));
+//            System.out.println(new String(is.readAllBytes()));
         } catch (Exception e){
             throw new RuntimeException(e);
         }
@@ -123,6 +123,6 @@ public class Authenticator {
 
     static void main(String[] args) {
         Authenticator authenticator = new Authenticator();
-        System.out.println(authenticator.authenticate("9ce9153d9c0c30b9b671bd65171c53de"));
+//        System.out.println(authenticator.authenticate("9ce9153d9c0c30b9b671bd65171c53de"));
     }
 }

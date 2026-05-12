@@ -86,13 +86,13 @@ public class SkinUploadHandler {
             os.close();
 
             int responseCode = conn.getResponseCode();
-            System.out.println("Manifest update response: " + responseCode);
+//            System.out.println("Manifest update response: " + responseCode);
 
             InputStream is = (responseCode >= 200 && responseCode < 300)
                     ? conn.getInputStream()
                     : conn.getErrorStream();
 
-            System.out.println(new String(is.readAllBytes()));
+//            System.out.println(new String(is.readAllBytes()));
         } catch (Exception e){
             throw new RuntimeException(e);
         }
@@ -136,7 +136,7 @@ public class SkinUploadHandler {
                 os.write(json.getBytes());
 
                 int responseCode = conn.getResponseCode();
-                System.out.println("Response:" + responseCode);
+//                System.out.println("Response:" + responseCode);
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
