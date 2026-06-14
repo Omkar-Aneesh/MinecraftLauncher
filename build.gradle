@@ -12,7 +12,10 @@ repositories {
 jar {
     manifest {
         attributes(
-                'Main-Class': 'client.Main'
+                'Main-Class': 'client.Main',
+                'Class-Path': provider {
+                    configurations.runtimeClasspath.collect { 'lib/' + it.name }.join(' ')
+                }
         )
     }
 }

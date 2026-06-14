@@ -31,10 +31,10 @@ public class MinecraftLauncher {
 
     boolean skinServerAlive = false;
 
-    public static String currentSituationString = "";
+    public static String currentSituationString = ""; //no
 
-    SkinServer skinServer = new SkinServer();
-    static Authenticator authenticator = new Authenticator();
+    SkinServer skinServer = new SkinServer();//no
+    static Authenticator authenticator = new Authenticator();//no
 
     static void main(String[] args) {
         MinecraftLauncher minecraftLauncher = new MinecraftLauncher();
@@ -44,49 +44,49 @@ public class MinecraftLauncher {
     public void run(String version, String username) {
         MC_DIR = "minecraft/" + version;
         try {
-            if (!skinServerAlive) {
-                new Thread(() -> {
-                    skinServer.launch();
-                    skinServerAlive = true;
-                }).start();
-            }
+            if (!skinServerAlive) {//no
+                new Thread(() -> {//no
+                    skinServer.launch();//no
+                    skinServerAlive = true;//no
+                }).start();//no
+            }//no
 
-            if (version.contains("forge")) {
-                Timer timer = new Timer(3000, e -> {
-                    SetupEnv.window.setVisible(false);
-                });
+            if (version.contains("forge")) {//no
+                Timer timer = new Timer(3000, e -> {//no
+                    SetupEnv.window.setVisible(false);//no
+                });//no
 
-                timer.setRepeats(false);
-                timer.start();
-                new Thread(() -> {
-                    try {
-                        launchForge(version, username);
-                    } catch (Exception e) {
-                        throw new RuntimeException(e);
-                    }
-                }).start();
-            } else if(version.contains("fabric")){
-                Timer timer = new Timer(8000, e -> {
-                    SetupEnv.window.setVisible(false);
-                });
+                timer.setRepeats(false);//no
+                timer.start();//no
+                new Thread(() -> {//no
+                    try {//no
+                        launchForge(version, username);//no
+                    } catch (Exception e) {//no
+                        throw new RuntimeException(e);//no
+                    }//no
+                }).start();//no
+            } else if(version.contains("fabric")){//no
+                Timer timer = new Timer(8000, e -> {//no
+                    SetupEnv.window.setVisible(false);//no
+                });//no
 
-                timer.setRepeats(false);
-                timer.start();
+                timer.setRepeats(false);//no
+                timer.start();//no
 
-                new Thread(() -> {
-                    try {
-                        launchFabric(version, username);
-                    } catch (Exception e) {
-                        throw new RuntimeException(e);
-                    }
-                }).start();
-            } else {
-                Timer timer = new Timer(5000, e -> {
-                    SetupEnv.window.setVisible(false);
-                });
+                new Thread(() -> {//no
+                    try {//no
+                        launchFabric(version, username);//no
+                    } catch (Exception e) {//no
+                        throw new RuntimeException(e);//no
+                    }//no
+                }).start();//no
+            } else {//no
+                Timer timer = new Timer(5000, e -> {//no
+                    SetupEnv.window.setVisible(false);//no
+                });//no
 
-                timer.setRepeats(false);
-                timer.start();
+                timer.setRepeats(false);//no
+                timer.start();//no
                 new Thread(() -> {
                     try {
                         launch(version, username);
@@ -104,7 +104,7 @@ public class MinecraftLauncher {
         username = name;
         version = v;
 
-        currentSituationString = "Finding Version";
+        currentSituationString = "Finding Version";//no
 
         Path versionDir = Paths.get(MC_DIR, "versions", version);
         JSONObject versionJson = new JSONObject( Files.readString(versionDir.resolve(version + ".json")) );

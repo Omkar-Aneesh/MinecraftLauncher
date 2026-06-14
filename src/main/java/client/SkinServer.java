@@ -290,6 +290,13 @@ public class SkinServer {
 
                 pendingSessions.put(serverId, uuid);
 
+                System.out.println("sessionListUpdated");
+
+                System.out.println(serverId);
+                System.out.println(uuid);
+
+                System.out.println("end");
+
                 httpExchange.sendResponseHeaders(204, -1);
             } else if (path.endsWith("/hasJoined")) {
                 String query = httpExchange.getRequestURI().getQuery();
@@ -298,7 +305,15 @@ public class SkinServer {
                 String serverId = params.get("serverId");
                 String uuid = pendingSessions.get(serverId).toString();
 
+                System.out.println("fetchingSessions");
+
+                System.out.println(serverId);
+                System.out.println(uuid);
+
+                System.out.println("end");
+
                 if (uuid != null){
+                    System.out.println("uuidNotNull");
                     String response = SkinServer.generateProfileResponse(uuid);
 
                     httpExchange.getResponseHeaders().add("Content-Type", "application/json");
@@ -306,6 +321,7 @@ public class SkinServer {
                     httpExchange.sendResponseHeaders(200, respBytes.length);
                     httpExchange.getResponseBody().write(respBytes);
                 } else {
+                    System.out.println("uuidNull");
                     httpExchange.sendResponseHeaders(204, -1);
                 }
             }
