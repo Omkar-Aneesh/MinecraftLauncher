@@ -44,12 +44,12 @@ public class MinecraftLauncher {
     public void run(String version, String username) {
         MC_DIR = "minecraft/" + version;
         try {
-            if (!skinServerAlive) {//no
-                new Thread(() -> {//no
-                    skinServer.launch();//no
-                    skinServerAlive = true;//no
-                }).start();//no
-            }//no
+//            if (!skinServerAlive) {//no
+//                new Thread(() -> {//no
+//                    skinServer.launch();//no
+//                    skinServerAlive = true;//no
+//                }).start();//no
+//            }//no
 
             if (version.contains("forge")) {//no
                 Timer timer = new Timer(3000, e -> {//no

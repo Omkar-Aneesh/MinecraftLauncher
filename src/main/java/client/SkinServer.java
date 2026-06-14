@@ -20,6 +20,7 @@ import java.nio.file.StandardCopyOption;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
+import java.util.UUID;
 
 public class SkinServer {
     static java.util.Map<String, String> skinMap = new java.util.HashMap<>();
@@ -280,6 +281,8 @@ public class SkinServer {
         public void handle(HttpExchange httpExchange) throws IOException {
             String path = httpExchange.getRequestURI().getPath();
 
+            System.out.println(httpExchange.getRequestURI().toString());
+
             if (path.endsWith("/join")){
                 InputStream is = httpExchange.getRequestBody();
                 String body = new String(is.readAllBytes(), StandardCharsets.UTF_8);
@@ -304,6 +307,35 @@ public class SkinServer {
 
                 String serverId = params.get("serverId");
                 String uuid = pendingSessions.get(serverId).toString();
+//                uuid = null;
+
+                if (uuid == null){
+                    System.out.println("assigningFakeUuid");
+                    String username = params.get("username");
+
+                    System.out.println(username);
+
+                    String uuidFake = UUID.nameUUIDFromBytes(username.getBytes()).toString().replace("-", "");
+
+                    System.out.println(uuidFake);
+
+                    System.out.println("authenticating");
+                    try {
+                        authenticator.authenticate(uuidFake);
+                        System.out.println("successfullyAuthenticated");
+                        uuid = "200";
+                    } catch (RuntimeException e){
+                        uuid = "404";
+                    }
+
+                    if (uuid.equals("200")) {
+                        uuid = uuidFake;
+                    } else {
+                        uuid = null;
+                    }
+
+                    System.out.println(uuid);
+                }
 
                 System.out.println("fetchingSessions");
 
