@@ -59,6 +59,8 @@ public class GamePanel extends JPanel implements Runnable{
         this.main = main;
     }
 
+
+
     public void setFullScreen(){
         GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
         GraphicsDevice gd = ge.getDefaultScreenDevice();

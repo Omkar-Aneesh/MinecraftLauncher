@@ -306,7 +306,14 @@ public class SkinServer {
                 Map<String, String> params = parseQuery(query);
 
                 String serverId = params.get("serverId");
-                String uuid = pendingSessions.get(serverId).toString();
+
+                String uuid = null;
+
+                try {
+                    uuid = pendingSessions.get(serverId).toString();
+                } catch (Exception e){
+
+                }
 //                uuid = null;
 
                 if (uuid == null){
